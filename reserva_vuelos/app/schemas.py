@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 import datetime
-from models import EstadoAsiento, EstadoReserva
+from app.models import EstadoAsiento, EstadoReserva
 
 class ReservaCreate(BaseModel):
     usuario_id: int

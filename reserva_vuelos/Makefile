@@ -20,10 +20,10 @@ stop-db:
 	podman rm -f $(DB_CONTAINER_NAME) || true
 
 run:
-	./venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+	./venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 test:
-	./venv/bin/python test_concurrency.py
+	./venv/bin/python tests/test_concurrency.py
 
 build:
 	podman build -t $(APP_IMAGE_NAME) .

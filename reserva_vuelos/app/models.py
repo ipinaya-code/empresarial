@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum
 from sqlalchemy.orm import relationship
 import enum
 import datetime
-from database import Base
+from app.database import Base
 
 class EstadoAsiento(enum.Enum):
     DISPONIBLE = "disponible"
