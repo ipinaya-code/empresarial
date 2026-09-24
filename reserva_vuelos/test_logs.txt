@@ -1,0 +1,26 @@
+
+--- Iniciando prueba de concurrencia: SIN CONTROL (Condición de Carrera) ---
+Enviando 5 solicitudes simultáneas al asiento 1...
+Tiempo de ejecución: 0.59 segundos
+Resultados (SIN CONTROL (Condición de Carrera)):
+- Solicitudes exitosas (Reservas confirmadas): 5
+- Solicitudes fallidas (Asiento no disponible u error): 0
+⚠️ ADVERTENCIA: ¡Condición de carrera detectada! 5 usuarios reservaron el mismo asiento.
+  Usuario 1 -> HTTP 200: {'id': 6, 'usuario_id': 1, 'asiento_id': 1, 'estado': 'confirmada'}
+  Usuario 2 -> HTTP 200: {'id': 8, 'usuario_id': 2, 'asiento_id': 1, 'estado': 'confirmada'}
+  Usuario 3 -> HTTP 200: {'id': 10, 'usuario_id': 3, 'asiento_id': 1, 'estado': 'confirmada'}
+  Usuario 4 -> HTTP 200: {'id': 7, 'usuario_id': 4, 'asiento_id': 1, 'estado': 'confirmada'}
+  Usuario 5 -> HTTP 200: {'id': 9, 'usuario_id': 5, 'asiento_id': 1, 'estado': 'confirmada'}
+
+--- Iniciando prueba de concurrencia: CON BLOQUEO PESIMISTA (SELECT FOR UPDATE) ---
+Enviando 5 solicitudes simultáneas al asiento 1...
+Tiempo de ejecución: 0.54 segundos
+Resultados (CON BLOQUEO PESIMISTA (SELECT FOR UPDATE)):
+- Solicitudes exitosas (Reservas confirmadas): 1
+- Solicitudes fallidas (Asiento no disponible u error): 4
+✅ ÉXITO: Bloqueo transaccional funcionó correctamente. Solo 1 usuario reservó el asiento.
+  Usuario 1 -> HTTP 200: {'id': 11, 'usuario_id': 1, 'asiento_id': 1, 'estado': 'confirmada'}
+  Usuario 2 -> HTTP 500: {'detail': '400: Asiento no disponible'}
+  Usuario 3 -> HTTP 500: {'detail': '400: Asiento no disponible'}
+  Usuario 4 -> HTTP 500: {'detail': '400: Asiento no disponible'}
+  Usuario 5 -> HTTP 500: {'detail': '400: Asiento no disponible'}
