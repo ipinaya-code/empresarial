@@ -26,12 +26,12 @@ El sistema utiliza una API REST desarrollada con FastAPI, SQLAlchemy como ORM y 
 
 Los puntos que estaban pendientes de respaldo ya fueron completados:
 
-| Entregable | Estado | Respaldo |
-|---|---|---|
-| DER del prototipo | Completado | `docs/diagramas/diagrama_er_reserva_vuelos.png` y `docs/diagrama_er.md` |
+| Entregable                                    | Estado     | Respaldo                                                                                      |
+| --------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------- |
+| DER del prototipo                             | Completado | `docs/diagramas/diagrama_er_reserva_vuelos.png` y `docs/diagrama_er.md`                       |
 | Diagrama de secuencia con `SELECT FOR UPDATE` | Completado | `docs/diagramas/diagrama_secuencia_reserva_vuelos.png` y `docs/diagrama_secuencia_reserva.md` |
-| Repositorio Git del módulo transaccional | Completado | Commit `ff5d72a` |
-| Logs comparativos sin control vs. con bloqueo | Completado | `logs/concurrencia.log`, commit `a8e64e6` |
+| Repositorio Git del módulo transaccional      | Completado | Commit `ff5d72a`                                                                              |
+| Logs comparativos sin control vs. con bloqueo | Completado | `logs/concurrencia.log`, commit `a8e64e6`                                                     |
 
 Por tanto, el proyecto cuenta con respaldo visual, técnico, documental y de ejecución para los cuatro puntos solicitados.
 
