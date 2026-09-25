@@ -1,7 +1,7 @@
 # Protocolo de Pruebas de Estrés - Prototipo BoA
 
 ## 1. Objetivo General
-Validar la capacidad, estabilidad y resistencia del nuevo módulo transaccional (basado en arquitectura CQRS, Caché de Redis y Postgres) bajo condiciones extremas de demanda, simulando escenarios reales de la aerolínea como la promoción "Vuelos Azules".
+Validar la capacidad, estabilidad y resistencia del nuevo módulo transaccional (basado en arquitectura CQRS, Caché de Valkey y Postgres) bajo condiciones extremas de demanda, simulando escenarios reales de la aerolínea como la promoción "Vuelos Azules".
 
 ## 2. Escenarios y Rampas de Carga
 El test simula un "User Journey" de búsqueda masiva, en donde miles de usuarios solicitan ver la disponibilidad de un vuelo simultáneamente.
@@ -23,7 +23,7 @@ Basados en los estándares internacionales de disponibilidad de servicios IATA N
 
 ## 4. Arquitectura Sometida a Prueba
 
-*   **Lectura de Disponibilidad (`GET /vuelos/{id}/disponibilidad`):** Validará el comportamiento del patrón CQRS y el *Cache Hit Ratio* de Redis. 
+*   **Lectura de Disponibilidad (`GET /vuelos/{id}/disponibilidad`):** Validará el comportamiento del patrón CQRS y el *Cache Hit Ratio* de Valkey. 
 *   **Aserciones (Checks):** 
     - Las peticiones retornan código HTTP 200.
     - La respuesta incluye el array de "asientos".
@@ -35,7 +35,7 @@ El protocolo se automatizó utilizando Grafana K6.
 
 ### Pre-requisitos
 1. `k6` debe estar instalado en la máquina anfitriona.
-2. Contenedores de API, PostgreSQL y Redis deben estar operativos (`make compose-up`).
+2. Contenedores de API, PostgreSQL y Valkey deben estar operativos (`make compose-up`).
 3. Ejecutar el seed (poblamiento de base de datos): `curl -X POST http://localhost:8000/seed`.
 
 ### Ejecución

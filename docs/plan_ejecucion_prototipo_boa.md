@@ -9,7 +9,7 @@ El proyecto actualmente cuenta con la base transaccional completa usando **FastA
 
 El prototipo se estructurará bajo los siguientes principios:
 1. **Separación de Responsabilidades (CQRS):** Lecturas cacheadas, escrituras transaccionales.
-2. **Locking Híbrido:** Uso de Redis para reservas temporales (Soft Lock) y SQL `SELECT FOR UPDATE` para la confirmación de pago (Pessimistic Lock).
+2. **Locking Híbrido:** Uso de Valkey para reservas temporales (Soft Lock) y SQL `SELECT FOR UPDATE` para la confirmación de pago (Pessimistic Lock).
 3. **Escalabilidad:** Simulación de picos de tráfico usando K6/JMeter.
 
 ---
@@ -39,13 +39,13 @@ El prototipo se estructurará bajo los siguientes principios:
 
 ---
 
-### Epic 3: Implementación de Capa de Caché con Redis (COMPLETADO ✅)
+### Epic 3: Implementación de Capa de Caché con Valkey (COMPLETADO ✅)
 **Responsable:** Nataly Crespo (Ingeniera de Software / DBA)
-**Estado:** Completado (Redis agregado al entorno, requerimientos, y `app/main.py`).
+**Estado:** Completado (Valkey agregado al entorno, requerimientos, y `app/main.py`).
 
-*   ✅ **Task 3.1:** Crear el Diagrama de Arquitectura ilustrando la integración con Redis (flujos de *Cache Hit* vs *Cache Miss*).
-*   ✅ **Task 3.2:** Actualizar `docker/docker-compose.yml` añadiendo un contenedor oficial de Redis y configurar la imagen de FastAPI (`Dockerfile`) para instalar dependencias de Redis (ej. `redis-py` o `aioredis` en `requirements.txt`).
-*   ✅ **Task 3.3:** Modificar el endpoint de disponibilidad de asientos para que lea primero de Redis. Establecer las políticas de TTL (ej: invalidación al reservar un asiento, expiración en 10 min).
+*   ✅ **Task 3.1:** Crear el Diagrama de Arquitectura ilustrando la integración con Valkey (flujos de *Cache Hit* vs *Cache Miss*).
+*   ✅ **Task 3.2:** Actualizar `docker/docker-compose.yml` añadiendo un contenedor oficial de Valkey y configurar la imagen de FastAPI (`Dockerfile`) para instalar dependencias de Valkey (ej. `redis-py` conectado a Valkey en `requirements.txt`).
+*   ✅ **Task 3.3:** Modificar el endpoint de disponibilidad de asientos para que lea primero de Valkey. Establecer las políticas de TTL (ej: invalidación al reservar un asiento, expiración en 10 min).
 *   ✅ **Task 3.4:** Ejecutar la prueba comparativa usando los scripts de K6 para documentar la reducción de queries directas a PostgreSQL ("Con Caché" vs "Sin Caché").
 *   *Limitación documentada:* Explicar en los documentos cómo el motor de pagos externo interactuaría con esta caché en un caso productivo real (fuera del alcance del prototipo).
 
@@ -63,6 +63,6 @@ El prototipo se estructurará bajo los siguientes principios:
 ---
 
 ## Entregables Finales Esperados del Equipo
-1. Repositorio Git centralizado con el backend, PostgreSQL, Redis, y scripts K6 listos para ejecutar con `make`.
+1. Repositorio Git centralizado con el backend, PostgreSQL, Valkey, y scripts K6 listos para ejecutar con `make`.
 2. Documento de Arquitectura, DER y diagramas de secuencia actualizados.
 3. Reporte final de validación de concurrencia (Epic 1) y estrés (Epic 4) demostrando 0 sobreasignaciones bajo carga masiva (latencia optimizada mediante CQRS y Caché).

@@ -8,7 +8,7 @@ import time
 import json
 
 def clear_cache(vuelo_id: int):
-    r = database.get_redis()
+    r = database.get_valkey()
     if r:
         try:
             r.delete(f"vuelo:{vuelo_id}:disponibilidad")
@@ -16,7 +16,7 @@ def clear_cache(vuelo_id: int):
             logger.error(f"Error borrando cache: {e}")
 
 def clear_all_cache():
-    r = database.get_redis()
+    r = database.get_valkey()
     if r:
         try:
             r.flushdb()
@@ -240,22 +240,22 @@ def consultar_disponibilidad(vuelo_id: int, db: Session = Depends(database.get_d
     """
     Endpoint de lectura optimizado.
     En una arquitectura CQRS completa, esta lectura podría venir de una 
-    réplica de lectura o de una caché (Redis) para evitar carga en el maestro.
+    réplica de lectura o de una caché (Valkey) para evitar carga en el maestro.
     No utiliza bloqueos (Locks).
     """
-    redis_client = database.get_redis()
+    valkey_client = database.get_valkey()
     cache_key = f"vuelo:{vuelo_id}:disponibilidad"
     
-    if redis_client:
+    if valkey_client:
         try:
-            cached_data = redis_client.get(cache_key)
+            cached_data = valkey_client.get(cache_key)
             if cached_data:
-                logger.info("Cache hit")
+                logger.info("Cache hit (Valkey)")
                 return json.loads(cached_data)
         except Exception as e:
-            logger.error(f"Error leyendo de Redis: {e}")
+            logger.error(f"Error leyendo de Valkey: {e}")
 
-    logger.info("Cache miss")
+    logger.info("Cache miss (Valkey)")
     vuelo = db.query(models.Vuelo).filter(models.Vuelo.id == vuelo_id).first()
     if not vuelo:
         raise HTTPException(status_code=404, detail="Vuelo no encontrado")
@@ -273,11 +273,11 @@ def consultar_disponibilidad(vuelo_id: int, db: Session = Depends(database.get_d
         "asientos": [{"id": a.id, "numero": a.numero, "estado": a.estado.value} for a in asientos]
     }
 
-    if redis_client:
+    if valkey_client:
         try:
             # TTL de 10 minutos
-            redis_client.setex(cache_key, 600, json.dumps(response_data))
+            valkey_client.setex(cache_key, 600, json.dumps(response_data))
         except Exception as e:
-            logger.error(f"Error escribiendo en Redis: {e}")
+            logger.error(f"Error escribiendo en Valkey: {e}")
 
     return response_data

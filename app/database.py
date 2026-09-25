@@ -25,11 +25,12 @@ def get_db():
         db.close()
 
 import redis
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+VALKEY_URL = os.getenv("VALKEY_URL", "redis://localhost:6379/0")
 try:
-    redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+    # Utilizamos el cliente de redis-py, pero conectando a Valkey
+    valkey_client = redis.from_url(VALKEY_URL, decode_responses=True)
 except Exception:
-    redis_client = None
+    valkey_client = None
 
-def get_redis():
-    return redis_client
+def get_valkey():
+    return valkey_client

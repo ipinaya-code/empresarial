@@ -20,7 +20,7 @@ GET /vuelos/{vuelo_id}/disponibilidad
 **Características de este Endpoint:**
 1. **Desacoplado de transacciones mutables:** Solo emite consultas `SELECT` directas a la base de datos a través de SQLAlchemy.
 2. **Formato Optimizado:** Utiliza los schemas `AsientoResponse` y `VueloDisponibilidadResponse` (`app/schemas.py`) para formatear y calcular la capacidad en tiempo de ejecución sin recargar la base de datos.
-3. **Escalabilidad:** En un entorno de producción, este endpoint podría ser redirigido directamente a una Réplica de Lectura (Read-Replica) de PostgreSQL o alimentado por una Caché (Redis) en la Épica 3, sin necesidad de modificar la lógica de los clientes.
+3. **Escalabilidad:** En un entorno de producción, este endpoint podría ser redirigido directamente a una Réplica de Lectura (Read-Replica) de PostgreSQL o alimentado por una Caché (Valkey) en la Épica 3, sin necesidad de modificar la lógica de los clientes.
 
 ## 3. Pruebas de Carga y Rendimiento (Protocolo K6)
 

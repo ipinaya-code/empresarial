@@ -22,8 +22,8 @@ El problema de la sobreasignación ocurre por un "Race Condition" o condición d
 
 ### 2.1. Bloqueos Temporales Distribuidos (Soft Locks)
 Es el estándar más usado en comercio electrónico de alta escala.
-- **Herramienta:** Redis o Memcached.
-- **Funcionamiento:** Cuando el Usuario A selecciona el asiento 12B, el sistema escribe en la memoria caché (Redis) un registro llave-valor con un Tiempo de Vida (TTL) de, por ejemplo, 10 minutos. Durante este tiempo, si el Usuario B consulta el mismo asiento, la caché indicará que está temporalmente reservado.
+- **Herramienta:** Valkey (o Redis / Memcached).
+- **Funcionamiento:** Cuando el Usuario A selecciona el asiento 12B, el sistema escribe en la memoria caché (Valkey) un registro llave-valor con un Tiempo de Vida (TTL) de, por ejemplo, 10 minutos. Durante este tiempo, si el Usuario B consulta el mismo asiento, la caché indicará que está temporalmente reservado.
 - **Ventaja:** No bloquea la base de datos principal, permitiendo soportar ráfagas de tráfico masivas.
 
 ### 2.2. Bloqueo Pesimista (Pessimistic Locking) a nivel de Base de Datos
@@ -33,7 +33,7 @@ Garantiza consistencia estricta en el motor de base de datos.
 
 ### 2.3. Patrón CQRS (Command Query Responsibility Segregation)
 Recomendado para campañas de alta demanda (ej. Vuelos Azules).
-- **Separación de Lectura y Escritura:** Las consultas de disponibilidad (Read) se dirigen a una base de datos replicada o a una capa de caché en memoria (Redis). Las transacciones de compra/reserva (Write) van a la base de datos transaccional principal.
+- **Separación de Lectura y Escritura:** Las consultas de disponibilidad (Read) se dirigen a una base de datos replicada o a una capa de caché en memoria (Valkey). Las transacciones de compra/reserva (Write) van a la base de datos transaccional principal.
 - **Beneficio:** Evita que las miles de consultas por minuto "congelen" el motor principal, permitiendo que las reservas sigan fluyendo.
 
 ## 3. Conclusión y Alineación con el Prototipo de BoA
@@ -41,8 +41,8 @@ Recomendado para campañas de alta demanda (ej. Vuelos Azules).
 Para el prototipo de BoA, la combinación de estos conceptos internacionales se traduce en:
 
 1. **Gestión de Estado Centralizada (Inspirado en ONE Order):** Las tablas del prototipo deben reflejar un modelo unificado de "Reserva/Orden".
-2. **Caché para Consultas (CQRS y Redis):** Reducir la carga de lectura en un 80% usando Redis para entregar los itinerarios y la disponibilidad inicial.
+2. **Caché para Consultas (CQRS y Valkey):** Reducir la carga de lectura en un 80% usando Valkey para entregar los itinerarios y la disponibilidad inicial.
 3. **Mecanismo de Lock Transaccional Híbrido:**
-   - *Soft Lock (Redis):* Reserva temporal del asiento (10 minutos) mientras el usuario está en el checkout.
+   - *Soft Lock (Valkey):* Reserva temporal del asiento (10 minutos) mientras el usuario está en el checkout.
    - *Hard Lock (FOR UPDATE):* Solo al momento de confirmar el pago y escribir en la base de datos se usa un bloqueo transaccional fugaz para garantizar ACID.
 4. **Pruebas de Estrés:** Usar herramientas como K6 para verificar que, simulando 500+ usuarios concurrentes pidiendo el mismo asiento, solo 1 obtenga éxito y los 499 restantes sean rechazados sin corromper la BD ni degradar la latencia (<= 200ms).
