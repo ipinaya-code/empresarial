@@ -302,5 +302,3 @@ Las imágenes se guardan automáticamente en `docs/diagramas/`.
 Este proyecto es un prototipo académico/técnico centrado en transaccionalidad y concurrencia. Los datos son simulados y no incluyen integración con sistemas reales de BoA, pagos, autenticación, emisión de boletos ni disponibilidad externa de vuelos.
 
 Para un entorno productivo sería necesario agregar migraciones de base de datos, autenticación, autorización para operaciones administrativas, gestión de pagos, observabilidad, secretos seguros y políticas de cancelación más completas.
-
-**Fecha meta registrada:** 19/09/2026.
