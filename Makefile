@@ -25,6 +25,9 @@ run:
 test:
 	./venv/bin/python tests/test_concurrency.py
 
+stress-test:
+	k6 run scripts/load_test_k6.js
+
 build:
 	podman build -f docker/Dockerfile -t $(APP_IMAGE_NAME) .
 

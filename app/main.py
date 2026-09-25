@@ -5,6 +5,23 @@ from app import models, schemas, database
 import datetime
 import logging
 import time
+import json
+
+def clear_cache(vuelo_id: int):
+    r = database.get_redis()
+    if r:
+        try:
+            r.delete(f"vuelo:{vuelo_id}:disponibilidad")
+        except Exception as e:
+            logger.error(f"Error borrando cache: {e}")
+
+def clear_all_cache():
+    r = database.get_redis()
+    if r:
+        try:
+            r.flushdb()
+        except Exception as e:
+            logger.error(f"Error limpiando cache: {e}")
 
 app = FastAPI(title="Prototipo de Reserva de Vuelos BoA - Transaccionalidad")
 logger = logging.getLogger(__name__)
@@ -40,6 +57,7 @@ def seed_data(db: Session = Depends(database.get_db)):
     db.commit()
     db.refresh(vuelo)
     asiento = asientos[0]
+    clear_all_cache()
     return {"msg": "Datos inicializados", "vuelo_id": vuelo.id, "asiento_id": asiento.id}
 
 @app.post("/reset")
@@ -50,6 +68,7 @@ def reset_data(db: Session = Depends(database.get_db)):
         synchronize_session=False,
     )
     db.commit()
+    clear_all_cache()
     return {"msg": "Datos reseteados"}
 
 @app.post("/reservar/inseguro", response_model=schemas.ReservaResponse)
@@ -79,6 +98,7 @@ def reservar_inseguro(reserva: schemas.ReservaCreate, db: Session = Depends(data
         raise HTTPException(status_code=409, detail="El asiento ya tiene una reserva activa")
     db.refresh(nueva_reserva)
     
+    clear_cache(asiento.vuelo_id)
     return nueva_reserva
 
 @app.post("/reservar/seguro", response_model=schemas.ReservaResponse)
@@ -106,6 +126,7 @@ def reservar_seguro(reserva: schemas.ReservaCreate, db: Session = Depends(databa
         db.commit()
         db.refresh(nueva_reserva)
         
+        clear_cache(asiento.vuelo_id)
         return nueva_reserva
     except HTTPException:
         db.rollback()
@@ -148,6 +169,7 @@ def reservar_provisional(reserva: schemas.ReservaCreate, db: Session = Depends(d
         db.add(nueva_reserva)
         db.commit()
         db.refresh(nueva_reserva)
+        clear_cache(asiento.vuelo_id)
         return nueva_reserva
     except HTTPException:
         db.rollback()
@@ -182,6 +204,7 @@ def confirmar_reserva(reserva_id: int, db: Session = Depends(database.get_db)):
     asiento.fecha_expiracion = None
     db.commit()
     db.refresh(reserva)
+    clear_cache(asiento.vuelo_id)
     return reserva
 
 
@@ -204,6 +227,8 @@ def expirar_reservas(db: Session = Depends(database.get_db)):
             asiento.estado = models.EstadoAsiento.DISPONIBLE
             asiento.fecha_expiracion = None
     db.commit()
+    if pendientes:
+        clear_all_cache()
     return {"expiradas": len(pendientes)}
 
 
@@ -218,6 +243,19 @@ def consultar_disponibilidad(vuelo_id: int, db: Session = Depends(database.get_d
     réplica de lectura o de una caché (Redis) para evitar carga en el maestro.
     No utiliza bloqueos (Locks).
     """
+    redis_client = database.get_redis()
+    cache_key = f"vuelo:{vuelo_id}:disponibilidad"
+    
+    if redis_client:
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                logger.info("Cache hit")
+                return json.loads(cached_data)
+        except Exception as e:
+            logger.error(f"Error leyendo de Redis: {e}")
+
+    logger.info("Cache miss")
     vuelo = db.query(models.Vuelo).filter(models.Vuelo.id == vuelo_id).first()
     if not vuelo:
         raise HTTPException(status_code=404, detail="Vuelo no encontrado")
@@ -226,11 +264,20 @@ def consultar_disponibilidad(vuelo_id: int, db: Session = Depends(database.get_d
     
     asientos_disponibles = [a for a in asientos if a.estado == models.EstadoAsiento.DISPONIBLE]
     
-    return {
+    response_data = {
         "vuelo_id": vuelo.id,
         "origen": vuelo.origen,
         "destino": vuelo.destino,
         "capacidad_total": vuelo.capacidad,
         "asientos_disponibles": len(asientos_disponibles),
-        "asientos": asientos
+        "asientos": [{"id": a.id, "numero": a.numero, "estado": a.estado.value} for a in asientos]
     }
+
+    if redis_client:
+        try:
+            # TTL de 10 minutos
+            redis_client.setex(cache_key, 600, json.dumps(response_data))
+        except Exception as e:
+            logger.error(f"Error escribiendo en Redis: {e}")
+
+    return response_data

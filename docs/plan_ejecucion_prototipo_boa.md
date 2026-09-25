@@ -27,38 +27,38 @@ El prototipo se estructurará bajo los siguientes principios:
 
 ---
 
-### Epic 2: Refactorización y Soporte a Picos de Demanda (EN PROGRESO 🟡)
+### Epic 2: Refactorización y Soporte a Picos de Demanda (COMPLETADO ✅)
 **Responsable:** Thiago Sossa (Arquitecto de Software / DevOps)
-**Fecha Meta:** 01/10/2026
+**Estado:** Completado (Endpoints implementados en `app/main.py` y script de estrés K6).
 
-*   [ ] **Task 2.1:** Diseñar el Diagrama de Arquitectura comparativo: Baseline (sin desacoplamiento) vs. Versión Refactorizada (lectura/escritura separadas - patrón CQRS).
-*   [ ] **Task 2.2:** Establecer las métricas Baseline de la API actual (que lee directamente de PostgreSQL) utilizando un script básico de carga (ej. 50/100 usuarios concurrentes).
-*   [ ] **Task 2.3:** Refactorizar el código para implementar CQRS en `app/main.py`. Crear endpoints de lectura independientes (`/vuelos/disponibilidad`) desacoplados de los endpoints de escritura (`/reservar/*`).
-*   [ ] **Task 2.4:** Configurar un entorno en `docker-compose.yml` para disparar pruebas de carga comparativa de lectura simulando 50, 200 y 500 usuarios virtuales.
-*   [ ] **Task 2.5:** Extraer las métricas p50/p95/p99, req/s y tasa de errores y generar un reporte de latencia. (Meta: Latencia < 200ms, Error Rate < 1%).
+*   ✅ **Task 2.1:** Diseñar el Diagrama de Arquitectura comparativo: Baseline (sin desacoplamiento) vs. Versión Refactorizada (lectura/escritura separadas - patrón CQRS). *(Completado en `docs/arquitectura_cqrs_objetivo_2.md`)*
+*   ✅ **Task 2.2:** Establecer las métricas Baseline de la API actual (que lee directamente de PostgreSQL) utilizando un script básico de carga (ej. 50/100 usuarios concurrentes).
+*   ✅ **Task 2.3:** Refactorizar el código para implementar CQRS en `app/main.py`. Crear endpoints de lectura independientes (`/vuelos/disponibilidad`) desacoplados de los endpoints de escritura (`/reservar/*`).
+*   ✅ **Task 2.4:** Configurar un entorno en `docker-compose.yml` para disparar pruebas de carga comparativa de lectura simulando 50, 200 y 500 usuarios virtuales.
+*   ✅ **Task 2.5:** Extraer las métricas p50/p95/p99, req/s y tasa de errores y generar un reporte de latencia. (Meta: Latencia < 200ms, Error Rate < 1%).
 
 ---
 
-### Epic 3: Implementación de Capa de Caché con Redis (PENDIENTE 🔴)
+### Epic 3: Implementación de Capa de Caché con Redis (COMPLETADO ✅)
 **Responsable:** Nataly Crespo (Ingeniera de Software / DBA)
-**Fecha Meta:** 15/10/2026
+**Estado:** Completado (Redis agregado al entorno, requerimientos, y `app/main.py`).
 
-*   [ ] **Task 3.1:** Crear el Diagrama de Arquitectura ilustrando la integración con Redis (flujos de *Cache Hit* vs *Cache Miss*).
-*   [ ] **Task 3.2:** Actualizar `docker/docker-compose.yml` añadiendo un contenedor oficial de Redis y configurar la imagen de FastAPI (`Dockerfile`) para instalar dependencias de Redis (ej. `redis-py` o `aioredis` en `requirements.txt`).
-*   [ ] **Task 3.3:** Modificar el endpoint de disponibilidad de asientos para que lea primero de Redis. Establecer las políticas de TTL (ej: invalidación al reservar un asiento, expiración en 10 min).
-*   [ ] **Task 3.4:** Ejecutar la prueba comparativa usando los scripts de K6 para documentar la reducción de queries directas a PostgreSQL ("Con Caché" vs "Sin Caché").
-*   *Limitación a documentar:* Explicar en los documentos cómo el motor de pagos externo interactuaría con esta caché en un caso productivo real (fuera del alcance del prototipo).
+*   ✅ **Task 3.1:** Crear el Diagrama de Arquitectura ilustrando la integración con Redis (flujos de *Cache Hit* vs *Cache Miss*).
+*   ✅ **Task 3.2:** Actualizar `docker/docker-compose.yml` añadiendo un contenedor oficial de Redis y configurar la imagen de FastAPI (`Dockerfile`) para instalar dependencias de Redis (ej. `redis-py` o `aioredis` en `requirements.txt`).
+*   ✅ **Task 3.3:** Modificar el endpoint de disponibilidad de asientos para que lea primero de Redis. Establecer las políticas de TTL (ej: invalidación al reservar un asiento, expiración en 10 min).
+*   ✅ **Task 3.4:** Ejecutar la prueba comparativa usando los scripts de K6 para documentar la reducción de queries directas a PostgreSQL ("Con Caché" vs "Sin Caché").
+*   *Limitación documentada:* Explicar en los documentos cómo el motor de pagos externo interactuaría con esta caché en un caso productivo real (fuera del alcance del prototipo).
 
 ---
 
-### Epic 4: Protocolo de Pruebas de Estrés Definitivo (PENDIENTE 🔴)
+### Epic 4: Protocolo de Pruebas de Estrés Definitivo (COMPLETADO ✅)
 **Responsable:** Wilson Gonzales (Líder de QA / Pruebas de Rendimiento)
-**Fecha Meta:** 05/11/2026
+**Estado:** Completado (Documento y scripts finalizados).
 
-*   [ ] **Task 4.1:** Elaborar el documento formal del protocolo de pruebas de estrés detallando escenarios de campañas de alta demanda (usuarios virtuales, rampas, aserciones y criterios de fallo). Guardarlo en `docs/protocolo_pruebas_estres.md`.
-*   [ ] **Task 4.2:** Desarrollar los scripts automatizados avanzados (ej. `scripts/load_test_k6.js`) que simulen todo el "User Journey" (Consultar Vuelos -> Consultar Asientos -> Reservar Seguro).
-*   [ ] **Task 4.3:** Añadir un comando en el `Makefile` (ej. `make stress-test`) para facilitar la ejecución automatizada del test en el entorno final integrado de Docker.
-*   [ ] **Task 4.4:** Generar el reporte técnico final comparativo mostrando el rendimiento general y cómo se evitó la saturación de la Base de Datos bajo extremo estrés.
+*   ✅ **Task 4.1:** Elaborar el documento formal del protocolo de pruebas de estrés detallando escenarios de campañas de alta demanda (usuarios virtuales, rampas, aserciones y criterios de fallo). Guardarlo en `docs/protocolo_pruebas_estres.md`.
+*   ✅ **Task 4.2:** Desarrollar los scripts automatizados avanzados (ej. `scripts/load_test_k6.js`) que simulen todo el "User Journey" (Consultar Vuelos -> Consultar Asientos -> Reservar Seguro).
+*   ✅ **Task 4.3:** Añadir un comando en el `Makefile` (ej. `make stress-test`) para facilitar la ejecución automatizada del test en el entorno final integrado de Docker.
+*   ✅ **Task 4.4:** Generar el reporte técnico final comparativo mostrando el rendimiento general y cómo se evitó la saturación de la Base de Datos bajo extremo estrés.
 
 ---
 

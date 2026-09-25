@@ -23,3 +23,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+import redis
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+try:
+    redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+except Exception:
+    redis_client = None
+
+def get_redis():
+    return redis_client
