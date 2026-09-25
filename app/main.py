@@ -205,3 +205,32 @@ def expirar_reservas(db: Session = Depends(database.get_db)):
             asiento.fecha_expiracion = None
     db.commit()
     return {"expiradas": len(pendientes)}
+
+
+# ==========================================
+# CQRS: LECTURAS (QUERIES) 
+# ==========================================
+@app.get("/vuelos/{vuelo_id}/disponibilidad", response_model=schemas.VueloDisponibilidadResponse)
+def consultar_disponibilidad(vuelo_id: int, db: Session = Depends(database.get_db)):
+    """
+    Endpoint de lectura optimizado.
+    En una arquitectura CQRS completa, esta lectura podría venir de una 
+    réplica de lectura o de una caché (Redis) para evitar carga en el maestro.
+    No utiliza bloqueos (Locks).
+    """
+    vuelo = db.query(models.Vuelo).filter(models.Vuelo.id == vuelo_id).first()
+    if not vuelo:
+        raise HTTPException(status_code=404, detail="Vuelo no encontrado")
+
+    asientos = db.query(models.Asiento).filter(models.Asiento.vuelo_id == vuelo_id).all()
+    
+    asientos_disponibles = [a for a in asientos if a.estado == models.EstadoAsiento.DISPONIBLE]
+    
+    return {
+        "vuelo_id": vuelo.id,
+        "origen": vuelo.origen,
+        "destino": vuelo.destino,
+        "capacidad_total": vuelo.capacidad,
+        "asientos_disponibles": len(asientos_disponibles),
+        "asientos": asientos
+    }
