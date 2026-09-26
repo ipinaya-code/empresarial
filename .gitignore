@@ -1,6 +1,63 @@
+# ─────────────────────────────────────────────────────────────
+# .gitignore — Sistema de Reservas BoA
+# ─────────────────────────────────────────────────────────────
+
+# ── Python ────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Entornos virtuales ────────────────────────────────────────
 .venv/
 venv/
+env/
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# ── Tests y cobertura ────────────────────────────────────────
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
+test.db
+
+# ── Logs ──────────────────────────────────────────────────────
 logs/*.log
+*.log
+
+# ── Bases de datos locales ────────────────────────────────────
 *.db
+*.sqlite3
+
+# ── Configuración local ──────────────────────────────────────
+.env
+!.env.example
+
+# ── Docker ────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── MyPy ──────────────────────────────────────────────────────
+.mypy_cache/
+
+# ── Ruff ──────────────────────────────────────────────────────
+.ruff_cache/
+
+# ── Archivos temporales del proyecto ─────────────────────────
+PRACTICA EMPRESARIAL-20260926T151958Z-1-001.zip
+PRACTICA EMPRESARIAL-20260926T151958Z-1-001/

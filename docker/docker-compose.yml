@@ -1,45 +1,84 @@
+# ─────────────────────────────────────────────────────────────
+# Docker Compose — Sistema de Reservas BoA
+# Entorno completo: PostgreSQL + Valkey + API
+# ─────────────────────────────────────────────────────────────
+
 services:
+  # ── PostgreSQL 15 ────────────────────────────────────────────
   db:
     image: docker.io/library/postgres:15
-    container_name: postgres-reserva-compose
+    container_name: boa-postgres
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: reservas_db
+      POSTGRES_USER: ${POSTGRES_USER:-boa_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boa_s3cur3_p4ss}
+      POSTGRES_DB: ${POSTGRES_DB:-boa_reservas}
     ports:
-      - "5455:5432"
+      - "${POSTGRES_PORT:-5455}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d reservas_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-boa_admin} -d ${POSTGRES_DB:-boa_reservas}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - boa-network
 
+  # ── Valkey 7.2 (Caché) ──────────────────────────────────────
+  valkey:
+    image: docker.io/valkey/valkey:7.2-alpine
+    container_name: boa-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - boa-network
+
+  # ── API FastAPI ─────────────────────────────────────────────
   api:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: reserva-api-compose
+    container_name: boa-api
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg2://admin:admin@db:5432/reservas_db
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-boa_admin}:${POSTGRES_PASSWORD:-boa_s3cur3_p4ss}@db:5432/${POSTGRES_DB:-boa_reservas}
       - VALKEY_URL=redis://valkey:6379/0
+      - LOG_LEVEL=INFO
+      - SECURE_LOCK_DELAY_SECONDS=60
+      - INSECURE_DELAY_SECONDS=0.5
     depends_on:
       db:
         condition: service_healthy
       valkey:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
-
-  valkey:
-    image: docker.io/valkey/valkey:7.2-alpine
-    container_name: valkey-reserva-compose
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    networks:
+      - boa-network
 
 volumes:
   db_data:
+    name: boa-postgres-data
+  valkey_data:
+    name: boa-valkey-data
+
+networks:
+  boa-network:
+    name: boa-network
+    driver: bridge

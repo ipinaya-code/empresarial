@@ -1,0 +1,147 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boa-reservas"
+version = "2.0.0"
+description = "Prototipo de sistema de reservas para Boliviana de Aviación (BoA) — Control de concurrencia y transaccionalidad"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Iver Pinaya", email = "iver.pinaya@boa.bo"},
+    {name = "Thiago Sossa", email = "thiago.sossa@boa.bo"},
+    {name = "Nataly Crespo", email = "nataly.crespo@boa.bo"},
+    {name = "Wilson Gonzales", email = "wilson.gonzales@boa.bo"},
+]
+keywords = ["airline", "booking", "concurrency", "boa", "fastapi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Education",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+
+dependencies = [
+    "fastapi>=0.110.0,<1.0.0",
+    "uvicorn[standard]>=0.27.0,<1.0.0",
+    "sqlalchemy>=2.0.0,<3.0.0",
+    "psycopg2-binary>=2.9.9,<3.0.0",
+    "pydantic>=2.6.0,<3.0.0",
+    "pydantic-settings>=2.1.0,<3.0.0",
+    "httpx>=0.27.0,<1.0.0",
+    "redis>=5.0.0,<6.0.0",
+    "alembic>=1.13.0,<2.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "python-jose[cryptography]>=3.3.0,<4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-asyncio>=0.23.0,<1.0.0",
+    "pytest-cov>=4.1.0,<6.0.0",
+    "ruff>=0.3.0,<1.0.0",
+    "mypy>=1.8.0,<2.0.0",
+    "pre-commit>=3.6.0,<4.0.0",
+    "black>=24.1.0,<25.0.0",
+    "httpx>=0.27.0,<1.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.5.0",
+]
+
+[project.urls]
+Repository = "https://github.com/ipinaya-code/empresarial"
+Documentation = "https://github.com/ipinaya-code/empresarial/tree/main/docs"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+# ──────────────────────────── Ruff (Linter + Formatter) ────────────────────────────
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit (seguridad)
+    "T20", # flake8-print
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "S101",  # assert en tests es válido
+    "S105",  # hardcoded passwords en config de ejemplo
+    "S106",  # hardcoded passwords en config de ejemplo
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S106"]
+"app/core/config.py" = ["S105", "S106"]
+"scripts/**/*.py" = ["T20"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# ──────────────────────────── Black (Formatter) ────────────────────────────
+[tool.black]
+target-version = ["py311"]
+line-length = 120
+
+# ──────────────────────────── MyPy (Type Checker) ────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+# ──────────────────────────── Pytest ────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "-v",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+]
+markers = [
+    "unit: Pruebas unitarias sin dependencias externas",
+    "integration: Pruebas de integración con base de datos",
+    "e2e: Pruebas de flujo completo end-to-end",
+    "stress: Pruebas de carga y estrés",
+    "slow: Pruebas que requieren más de 10 segundos",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/db/migrations/*",
+    "tests/*",
+]
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+]

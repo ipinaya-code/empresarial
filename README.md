@@ -1,304 +1,258 @@
-# Prototipo transaccional de reserva de vuelos
+# ✈️ Sistema de Reservas — Boliviana de Aviación (BoA)
 
-## Responsable
+<div align="center">
 
-**Iver Pinaya — Líder Backend / DBA**
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 
-## Descripción
+**Prototipo de sistema de reservas con control de concurrencia transaccional**
 
-Este proyecto implementa un prototipo de reserva de vuelos para demostrar cómo controlar la concurrencia al asignar asientos. El objetivo principal es evitar que dos o más usuarios confirmen el mismo asiento cuando existen solicitudes simultáneas.
+[Documentación](#-documentación) · [Inicio Rápido](#-inicio-rápido) · [API](#-endpoints-de-la-api) · [Arquitectura](#-arquitectura) · [Contribuir](CONTRIBUTING.md)
 
-El sistema utiliza una API REST desarrollada con FastAPI, SQLAlchemy como ORM y PostgreSQL como motor de base de datos. El flujo crítico incorpora bloqueo pesimista a nivel de fila mediante `SELECT FOR UPDATE`, transacciones y una reserva provisional temporal.
+</div>
 
-## Objetivos del trabajo
+---
 
-- Modelar la base de datos del proceso de reserva.
-- Implementar usuarios, vuelos, asientos y reservas.
-- Prevenir condiciones de carrera al asignar un asiento.
-- Evitar la sobreescritura y duplicación de reservas activas.
-- Implementar reservas provisionales con expiración.
-- Confirmar o cancelar reservas según su vigencia.
-- Comparar un flujo sin control transaccional con uno protegido.
-- Registrar evidencia de las pruebas de concurrencia.
-- Documentar el diseño mediante diagramas ER, de secuencia y de flujo.
+## 📋 Descripción
 
-## Estado de los entregables
+Este proyecto implementa un prototipo del sistema de reservas de vuelos de **Boliviana de Aviación (BoA)**, enfocado en demostrar cómo controlar la **concurrencia al asignar asientos** y prevenir condiciones de carrera (*race conditions*).
 
-Los puntos que estaban pendientes de respaldo ya fueron completados:
+### ¿Qué resuelve?
 
-| Entregable                                    | Estado     | Respaldo                                                                                      |
-| --------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------- |
-| DER del prototipo                             | Completado | `docs/diagramas/diagrama_er_reserva_vuelos.png` y `docs/diagrama_er.md`                       |
-| Diagrama de secuencia con `SELECT FOR UPDATE` | Completado | `docs/diagramas/diagrama_secuencia_reserva_vuelos.png` y `docs/diagrama_secuencia_reserva.md` |
-| Repositorio Git del módulo transaccional      | Completado | Commit `ff5d72a`                                                                              |
-| Logs comparativos sin control vs. con bloqueo | Completado | `logs/concurrencia.log`, commit `a8e64e6`                                                     |
+Cuando cientos de pasajeros intentan reservar el mismo asiento de un vuelo en oferta ("Vuelos Azules"), el sistema debe garantizar que:
 
-Por tanto, el proyecto cuenta con respaldo visual, técnico, documental y de ejecución para los cuatro puntos solicitados.
+- ✅ Solo **un pasajero** obtenga cada asiento
+- ✅ No haya **sobreasignaciones** (overbooking no deseado)
+- ✅ Las **reservas provisionales** expiren si no se confirman
+- ✅ Las **consultas masivas** no bloqueen las transacciones de compra
 
-## Arquitectura
+### Estándares Implementados
 
-```text
-Cliente HTTP
-    |
-    v
-FastAPI
-    |
-    v
-SQLAlchemy
-    |
-    v
-PostgreSQL
+| Estándar | Implementación |
+|----------|---------------|
+| **IATA NDC** | Offer Validity Windows → Reserva provisional con TTL |
+| **IATA ONE Order** | Código PNR centralizado (`BOA-A1B2C3`) |
+| **CQRS** | Lecturas cacheadas en Valkey, escrituras con locks en PostgreSQL |
+| **ACID** | Transacciones con `SELECT FOR UPDATE` (bloqueo pesimista) |
+| **12-Factor App** | Configuración por variables de entorno |
+
+## 👥 Equipo
+
+| Integrante | Rol | Épica |
+|-----------|-----|-------|
+| **Iver Pinaya** | Líder Backend / DBA | Epic 1: Control Transaccional |
+| **Thiago Sossa** | Arquitecto de Software / DevOps | Epic 2: Refactorización CQRS |
+| **Nataly Crespo** | Ingeniera de Software / DBA | Epic 3: Caché Valkey |
+| **Wilson Gonzales** | Líder de QA / Rendimiento | Epic 4: Pruebas de Estrés |
+
+## 🚀 Inicio Rápido
+
+### Con Docker (recomendado)
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/ipinaya-code/empresarial.git
+cd empresarial
+
+# 2. Levantar todo el entorno
+make compose-up
+
+# 3. Inicializar datos de demostración de BoA
+make seed
+
+# 4. Abrir la documentación interactiva
+xdg-open http://localhost:8000/docs
 ```
+
+### Sin Docker (desarrollo local)
+
+```bash
+# 1. Configurar entorno
+make setup
+source .venv/bin/activate
+cp .env.example .env
+
+# 2. Iniciar PostgreSQL (requiere instancia local o contenedor)
+make db-start
+
+# 3. Iniciar la API
+make run
+```
+
+## 🏗️ Arquitectura
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Cliente HTTP                          │
+│              (curl, httpx, navegador, K6)                │
+└─────────────────────┬────────────────────────────────────┘
+                      │ HTTP :8000
+┌─────────────────────▼────────────────────────────────────┐
+│                  FastAPI (Uvicorn)                        │
+│  ┌─────────────────────────┐  ┌────────────────────────┐ │
+│  │  📖 QUERIES (Lecturas)  │  │  ✏️ COMMANDS (Escritura)│ │
+│  │  GET /vuelos/disp.      │  │  POST /reservar/*      │ │
+│  │  Sin bloqueos           │  │  SELECT FOR UPDATE     │ │
+│  └──────────┬──────────────┘  └──────────┬─────────────┘ │
+│             │                            │               │
+│  ┌──────────▼──────────┐   ┌─────────────▼───────────┐   │
+│  │    Valkey (Caché)    │   │    PostgreSQL 15        │   │
+│  │    TTL: 10 min       │   │    Transacciones ACID   │   │
+│  │    Cache Hit/Miss    │   │    Bloqueo pesimista    │   │
+│  └─────────────────────┘   └─────────────────────────┘   │
+└──────────────────────────────────────────────────────────┘
+```
+
+Para diagramas detallados ver:
+- [Arquitectura del Sistema (C4)](docs/arquitectura_sistema.md)
+- [Diagrama ER Extendido](docs/diagrama_er.md)
+- [Diagramas de Secuencia](docs/diagrama_secuencia_reserva.md)
 
 ### Tecnologías
 
-- Python 3.11+
-- FastAPI
-- Uvicorn
-- SQLAlchemy
-- PostgreSQL 15
-- psycopg2-binary
-- Pydantic
-- HTTPX
-- Docker Compose o Podman Compose
+| Componente | Tecnología | Versión |
+|-----------|-----------|---------|
+| API | FastAPI + Uvicorn | 0.110+ |
+| ORM | SQLAlchemy | 2.0+ |
+| Base de datos | PostgreSQL | 15 |
+| Caché | Valkey | 7.2 |
+| Contenedores | Docker Compose | v2 |
+| Tests | Pytest | 8.0+ |
+| Linting | Ruff + Black | Latest |
+| CI/CD | GitHub Actions | v4 |
+| Load Testing | Grafana K6 | Latest |
 
-## Estructura del proyecto
+## 📁 Estructura del Proyecto
 
-```text
-reserva_vuelos/
+```
+empresarial/
 ├── app/
-│   ├── database.py       # Conexión y sesiones de PostgreSQL
-│   ├── main.py           # API y flujo transaccional
-│   ├── models.py         # Modelos y restricciones de base de datos
-│   └── schemas.py        # Validación de solicitudes y respuestas
-├── docker/
-│   ├── Dockerfile        # Imagen de la API
-│   └── docker-compose.yml # PostgreSQL y API
-├── docs/
-│   ├── diagramas/
-│   │   ├── diagrama_er_reserva_vuelos.png
-│   │   ├── diagrama_flujo_reserva_vuelos.png
-│   │   └── diagrama_secuencia_reserva_vuelos.png
-│   ├── diagrama_er.md
-│   ├── diagrama_secuencia_reserva.md
-│   └── evidencia_pruebas.md
-├── scripts/
-│   └── generar_diagrama.py # Generador de los diagramas PNG
+│   ├── core/                  # Configuración, excepciones, logging
+│   │   ├── config.py          # Pydantic Settings (env vars)
+│   │   ├── exceptions.py      # Excepciones de dominio tipadas
+│   │   └── logging.py         # Logging estructurado
+│   ├── models/                # Modelos SQLAlchemy
+│   │   ├── usuario.py         # Pasajero (CI, nacionalidad)
+│   │   ├── vuelo.py           # Vuelo (IATA, Boeing 737-300)
+│   │   ├── asiento.py         # Asiento (clase, estado)
+│   │   └── reserva.py         # Reserva (PNR, TTL)
+│   ├── schemas/               # Validación Pydantic
+│   ├── services/              # Lógica de negocio
+│   │   ├── reserva_service.py # Flujos de reserva (inseguro/seguro/provisional)
+│   │   ├── disponibilidad_service.py  # CQRS: lecturas + caché
+│   │   └── seed_service.py    # Datos realistas de BoA
+│   ├── api/v1/                # Routers FastAPI
+│   │   ├── reservas.py        # Endpoints de escritura
+│   │   ├── vuelos.py          # Endpoints de lectura
+│   │   ├── admin.py           # Seed y reset
+│   │   └── health.py          # Health checks
+│   ├── db/                    # Sesión de BD y caché
+│   └── main.py                # App factory
 ├── tests/
-│   └── test_concurrency.py  # Prueba de solicitudes simultáneas
-├── .dockerignore
-├── .gitignore
-├── Makefile
-├── requirements.txt
-└── README.md
+│   ├── unit/                  # Tests unitarios
+│   ├── integration/           # Tests con BD
+│   └── e2e/                   # Tests de flujo completo
+├── docker/
+│   ├── Dockerfile             # Multi-stage (builder + runtime)
+│   └── docker-compose.yml     # PostgreSQL + Valkey + API
+├── scripts/
+│   └── load_test_k6.js        # Pruebas de carga K6
+├── docs/                      # Documentación y diagramas
+├── .github/
+│   ├── workflows/ci.yml       # Pipeline CI/CD
+│   ├── CODEOWNERS             # Responsables por área
+│   └── PULL_REQUEST_TEMPLATE.md
+├── pyproject.toml             # Configuración del proyecto
+├── Makefile                   # Automatización de tareas
+├── CONTRIBUTING.md            # Guía de contribución
+├── CHANGELOG.md               # Historial de cambios
+└── .env.example               # Variables de entorno
 ```
 
-## Modelo de datos
+## 🔌 Endpoints de la API
 
-### Usuario
+### `v1` — Endpoints principales (`/api/v1/`)
 
-Representa a la persona que realiza una reserva.
+| Método | Endpoint | Descripción | Patrón |
+|--------|----------|-------------|--------|
+| `GET` | `/api/v1/health` | Health check básico | — |
+| `GET` | `/api/v1/health/ready` | Readiness check (PG + Valkey) | — |
+| `POST` | `/api/v1/admin/seed` | Inicializar datos BoA | Admin |
+| `POST` | `/api/v1/admin/reset` | Resetear reservas | Admin |
+| `GET` | `/api/v1/vuelos/{id}/disponibilidad` | Disponibilidad de asientos | CQRS: Query |
+| `POST` | `/api/v1/reservar/inseguro` | Reserva SIN bloqueo (demo) | CQRS: Command |
+| `POST` | `/api/v1/reservar/seguro` | Reserva CON `SELECT FOR UPDATE` | CQRS: Command |
+| `POST` | `/api/v1/reservar/provisional` | Reserva temporal (TTL 10min) | CQRS: Command |
+| `POST` | `/api/v1/reservar/{id}/confirmar` | Confirmar reserva provisional | CQRS: Command |
+| `POST` | `/api/v1/reservar/expirar` | Expirar reservas vencidas | CQRS: Command |
 
-- `id`: clave primaria.
-- `nombre`: nombre del usuario.
-- `email`: correo único.
+### Documentación Interactiva
 
-### Vuelo
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
 
-Representa el trayecto disponible.
+## 🔄 Flujo Transaccional
 
-- `id`: clave primaria.
-- `origen`: aeropuerto o ciudad de origen.
-- `destino`: aeropuerto o ciudad de destino.
-- `fecha`: fecha y hora del vuelo.
-- `capacidad`: cantidad declarada de asientos.
+### Ciclo de vida de un asiento
 
-### Asiento
-
-Representa un asiento perteneciente a un vuelo.
-
-- `id`: clave primaria.
-- `vuelo_id`: clave foránea hacia `vuelos`.
-- `numero`: identificador del asiento, por ejemplo `1A`.
-- `estado`: `DISPONIBLE`, `RESERVADO_PROVISIONAL` o `CONFIRMADO`.
-- `fecha_expiracion`: fecha límite de una reserva provisional.
-
-### Reserva
-
-Relaciona un usuario con un asiento.
-
-- `id`: clave primaria.
-- `usuario_id`: clave foránea hacia `usuarios`.
-- `asiento_id`: clave foránea hacia `asientos`.
-- `fecha_reserva`: fecha de creación.
-- `fecha_expiracion`: límite de la reserva provisional.
-- `estado`: `PENDIENTE`, `CONFIRMADA` o `CANCELADA`.
-
-La base de datos incluye un índice único parcial para impedir más de una reserva activa (`PENDIENTE` o `CONFIRMADA`) para el mismo asiento.
-
-## Flujo transaccional
-
-### Reserva segura
-
-1. La API recibe `usuario_id` y `asiento_id`.
-2. Valida que el usuario y el asiento existan.
-3. Ejecuta una consulta con `SELECT FOR UPDATE`.
-4. PostgreSQL bloquea la fila del asiento.
-5. Se verifica que el asiento esté disponible.
-6. Se simula un procesamiento de **1 minuto (60 segundos)** mientras la fila permanece bloqueada.
-7. Se actualiza el asiento y se crea la reserva.
-8. Se confirma la transacción con `COMMIT`.
-9. Se libera el bloqueo.
-10. Las demás solicitudes reciben un error porque el asiento ya no está disponible.
-
-Mientras una solicitud mantiene el bloqueo, otra solicitud que intenta reservar el mismo asiento debe esperar hasta que termine la transacción. El minuto es una latencia simulada para hacer visible el efecto del bloqueo en la prueba.
-
-El flujo inseguro utiliza una espera corta de **0.5 segundos** y no bloquea la fila antes de verificar el estado. Esa diferencia permite demostrar la condición de carrera.
-
-### Reserva provisional
-
-El flujo provisional separa la asignación del asiento de la confirmación final:
-
-```text
-DISPONIBLE
-    |
-    v
-RESERVADO_PROVISIONAL
-    |                 \
-    |                  \ expira
-    v                   v
-CONFIRMADO        DISPONIBLE
+```
+DISPONIBLE ──────► RESERVADO_PROVISIONAL ──────► CONFIRMADO
+     ▲                      │
+     │                      │ (expira TTL)
+     └──────────────────────┘
 ```
 
-La reserva provisional tiene una duración de diez minutos. Si se confirma dentro del plazo, el asiento pasa a `CONFIRMADO`. Si expira, la reserva pasa a `CANCELADA` y el asiento vuelve a `DISPONIBLE`.
+### Comparación de flujos
 
-## Endpoints
+| Aspecto | Sin Control | Con `SELECT FOR UPDATE` |
+|---------|------------|------------------------|
+| Bloqueo de fila | ❌ No | ✅ Sí |
+| Espera simulada | 0.5s | 60s |
+| Race condition | ⚠️ Posible | ✅ Prevenida |
+| Sobreasignación | ⚠️ Posible (protegida por índice) | ✅ Imposible |
+| Resultado con 5 solicitudes | Puede tener >1 éxito HTTP | Exactamente 1 éxito |
 
-| Método | Ruta                               | Función                                                          |
-| ------ | ---------------------------------- | ---------------------------------------------------------------- |
-| `POST` | `/seed`                            | Crea un vuelo, 100 asientos y 10 usuarios de prueba.             |
-| `POST` | `/reset`                           | Elimina reservas y libera los asientos para repetir las pruebas. |
-| `POST` | `/reservar/inseguro`               | Flujo sin bloqueo pesimista, utilizado como comparación.         |
-| `POST` | `/reservar/seguro`                 | Reserva confirmada con `SELECT FOR UPDATE`.                      |
-| `POST` | `/reservar/provisional`            | Crea una reserva temporal pendiente.                             |
-| `POST` | `/reservar/{reserva_id}/confirmar` | Confirma una reserva provisional vigente.                        |
-| `POST` | `/reservar/expirar`                | Cancela reservas provisionales vencidas y libera asientos.       |
-
-La documentación interactiva de FastAPI está disponible en `/docs` cuando la API está ejecutándose.
-
-## Códigos HTTP principales
-
-- `200`: operación completada.
-- `400`: solicitud válida, pero el asiento no está disponible en el flujo directo.
-- `404`: usuario, asiento o reserva inexistente.
-- `409`: conflicto de concurrencia, reserva activa duplicada o reserva provisional expirada.
-- `422`: datos de entrada inválidos.
-- `500`: error interno inesperado, sin exponer detalles de la base de datos al cliente.
-
-## Prueba de concurrencia
-
-El archivo `tests/test_concurrency.py` ejecuta el siguiente escenario:
-
-1. Reinicia los datos.
-2. Inicializa el vuelo, los asientos y los usuarios.
-3. Envía cinco solicitudes simultáneas para el mismo asiento.
-4. Ejecuta el escenario inseguro.
-5. Ejecuta el escenario seguro.
-6. Consulta PostgreSQL después de las solicitudes.
-7. Cuenta respuestas exitosas y fallidas.
-8. Cuenta reservas activas realmente persistidas.
-9. Calcula las sobreasignaciones persistidas.
-10. Verifica que la ruta segura deje exactamente una reserva confirmada.
-
-El resultado se guarda en:
-
-```text
-logs/concurrencia.log
-```
-
-La prueba utiliza cinco solicitudes como escenario simulado. Los volúmenes de tráfico y los datos de vuelos no representan estadísticas reales de BoA, ya que se calibran con valores estimados para demostrar el comportamiento transaccional.
-
-## Diagramas
-
-- [Diagrama ER en PNG](docs/diagramas/diagrama_er_reserva_vuelos.png)
-- [Diagrama de flujo en PNG](docs/diagramas/diagrama_flujo_reserva_vuelos.png)
-- [Diagrama de secuencia en PNG](docs/diagramas/diagrama_secuencia_reserva_vuelos.png)
-- [Diagrama ER editable en Mermaid](docs/diagrama_er.md)
-- [Diagrama de secuencia editable en Mermaid](docs/diagrama_secuencia_reserva.md)
-- [Documentación de evidencia](docs/evidencia_pruebas.md)
-- [Guía para generar los logs](docs/como_generar_logs.md)
-
-## Ejecución con Docker
-
-Desde la raíz del proyecto:
+## 🧪 Tests
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+make test              # Todos los tests con cobertura
+make test-unit         # Solo unitarios (modelos, schemas)
+make test-integration  # Con base de datos (endpoints)
+make test-e2e          # Flujo completo de pasajero
+make stress-test       # Pruebas de carga con K6 (500 VU)
 ```
 
-Verificar los contenedores:
+## 📊 Datos Simulados de BoA
 
-```bash
-docker compose -f docker/docker-compose.yml ps
-```
+El seed genera datos realistas basados en la operación real de BoA:
 
-Abrir la API:
+- **12 rutas domésticas** (VVI↔LPB, VVI↔CBB, LPB↔CBB, etc.)
+- **Boeing 737-300**: 18 asientos ejecutiva + 114 económica = 132 por vuelo
+- **20 pasajeros** con nombres y documentos bolivianos
+- **Horarios realistas**: 06:00, 08:30, 12:00, 15:30, 19:00
+- **Códigos IATA**: Vuelos `OB-100` a `OB-111`, PNR `BOA-XXXXXX`
 
-```text
-http://localhost:8000/docs
-```
+## 📖 Documentación
 
-Detener el entorno:
+| Documento | Descripción |
+|-----------|-------------|
+| [Arquitectura del Sistema](docs/arquitectura_sistema.md) | Diagramas C4, CQRS, deployment |
+| [Diagrama ER](docs/diagrama_er.md) | Modelo de datos con campos IATA |
+| [Diagramas de Secuencia](docs/diagrama_secuencia_reserva.md) | Flujos seguro, provisional, inseguro |
+| [Arquitectura CQRS](docs/arquitectura_cqrs_objetivo_2.md) | Justificación del patrón CQRS |
+| [Estándares IATA](docs/investigacion_estandares_boa.md) | NDC, ONE Order, patrones de concurrencia |
+| [Plan de Ejecución](docs/plan_ejecucion_prototipo_boa.md) | Backlog completo por épica |
+| [Protocolo de Estrés](docs/protocolo_pruebas_estres.md) | SLAs, rampas de carga, criterios |
+| [Evidencia de Pruebas](docs/evidencia_pruebas.md) | Cómo ejecutar y validar |
+| [Guía de Logs](docs/como_generar_logs.md) | Generación de evidencia |
 
-```bash
-docker compose -f docker/docker-compose.yml down
-```
+## 🤝 Contribuir
 
-El servicio PostgreSQL utiliza el puerto `5455` en el equipo local y el servicio API utiliza el puerto `8000`.
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) para la guía completa del equipo.
 
-## Ejecución local
+## 📄 Licencia
 
-Crear el entorno e instalar dependencias:
-
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Iniciar la API:
-
-```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-La variable `DATABASE_URL` puede configurarse para apuntar a PostgreSQL:
-
-```text
-postgresql://admin:admin@localhost:5455/reservas_db
-```
-
-## Comandos del Makefile
-
-```bash
-make setup       # Crea el entorno virtual e instala dependencias
-make run         # Inicia la API
-make test        # Ejecuta la prueba de concurrencia
-make build       # Construye la imagen de la API
-make compose-up  # Levanta PostgreSQL y la API
-make compose-down
-```
-
-También se puede regenerar el material visual con:
-
-```bash
-python scripts/generar_diagrama.py
-```
-
-Las imágenes se guardan automáticamente en `docs/diagramas/`.
-
-## Alcance y consideraciones
-
-Este proyecto es un prototipo académico/técnico centrado en transaccionalidad y concurrencia. Los datos son simulados y no incluyen integración con sistemas reales de BoA, pagos, autenticación, emisión de boletos ni disponibilidad externa de vuelos.
-
-Para un entorno productivo sería necesario agregar migraciones de base de datos, autenticación, autorización para operaciones administrativas, gestión de pagos, observabilidad, secretos seguros y políticas de cancelación más completas.
+Este proyecto es un prototipo académico/técnico. Los datos son simulados y no representan información real de Boliviana de Aviación.

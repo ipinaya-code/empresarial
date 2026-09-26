@@ -1,5 +1,22 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 .git/
+.github/
 test_logs.txt
+tests/
+docs/
+*.md
+!requirements.txt
+.env
+.env.example
+htmlcov/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+PRACTICA EMPRESARIAL*/
+*.zip
+*.xlsx
+*.xlsm
