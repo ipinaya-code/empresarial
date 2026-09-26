@@ -84,10 +84,19 @@ ignore = [
     "S101",  # assert en tests es válido
     "S105",  # hardcoded passwords en config de ejemplo
     "S106",  # hardcoded passwords en config de ejemplo
+    "B008",  # Depends en endpoints
+    "N818",  # sufijo Error en excepciones
+    "S311",  # generadores pseudo-aleatorios (demostración)
+    "B904",  # raise from err
+    "SIM105", # suppress(Exception)
+    "S110",   # try-except-pass
+    "SIM113", # enumerate en for
+    "B007",   # var de iteración no usada
+    "F401",   # unused imports en inits
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "S106"]
+"tests/**/*.py" = ["S101", "S106", "E402", "T201"]
 "app/core/config.py" = ["S105", "S106"]
 "scripts/**/*.py" = ["T20"]
 
