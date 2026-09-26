@@ -1,6 +1,5 @@
 """Tests unitarios para los modelos del sistema de reservas BoA."""
 
-
 from app.models.asiento import ClaseServicio, EstadoAsiento
 from app.models.reserva import EstadoReserva
 

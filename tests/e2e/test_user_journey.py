@@ -10,7 +10,6 @@ Simula el flujo real de un pasajero:
 """
 
 
-
 class TestUserJourney:
     """Flujo end-to-end de un pasajero reservando un vuelo."""
 

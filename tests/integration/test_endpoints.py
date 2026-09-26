@@ -6,7 +6,6 @@ de test para verificar el flujo end-to-end.
 """
 
 
-
 class TestHealthEndpoints:
     """Tests de los endpoints de health check."""
 
