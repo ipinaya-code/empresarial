@@ -2,7 +2,7 @@
 
 import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.asiento import AsientoResponse
 
@@ -22,8 +22,7 @@ class VueloResponse(BaseModel):
     capacidad: int
     estado: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VueloDisponibilidadResponse(BaseModel):
@@ -43,5 +42,4 @@ class VueloDisponibilidadResponse(BaseModel):
     asientos_economica_disponibles: int
     asientos: list[AsientoResponse]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

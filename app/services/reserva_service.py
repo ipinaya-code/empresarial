@@ -61,6 +61,7 @@ def _validar_usuario(db: Session, usuario_id: int) -> Usuario:
 #  FLUJO INSEGURO — Sin bloqueo (demuestra Race Condition)
 # ════════════════════════════════════════════════════════════════
 
+
 def reservar_inseguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
     """
     Flujo SIN control de concurrencia.
@@ -94,7 +95,9 @@ def reservar_inseguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
         db.commit()
         db.refresh(nueva_reserva)
         _invalidar_cache_vuelo(asiento)
-        logger.info(f"[INSEGURO] Reserva {nueva_reserva.codigo_reserva} creada — Usuario {usuario_id}, Asiento {asiento_id}")
+        logger.info(
+            f"[INSEGURO] Reserva {nueva_reserva.codigo_reserva} creada — Usuario {usuario_id}, Asiento {asiento_id}"
+        )
         return nueva_reserva
     except IntegrityError:
         db.rollback()
@@ -104,6 +107,7 @@ def reservar_inseguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
 # ════════════════════════════════════════════════════════════════
 #  FLUJO SEGURO — SELECT FOR UPDATE (Bloqueo Pesimista)
 # ════════════════════════════════════════════════════════════════
+
 
 def reservar_seguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
     """
@@ -115,12 +119,7 @@ def reservar_seguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
     """
     try:
         # Bloqueo pesimista: la fila queda bloqueada hasta COMMIT/ROLLBACK
-        asiento = (
-            db.query(Asiento)
-            .filter(Asiento.id == asiento_id)
-            .with_for_update()
-            .first()
-        )
+        asiento = db.query(Asiento).filter(Asiento.id == asiento_id).with_for_update().first()
 
         if not asiento:
             raise AsientoNoEncontradoError(asiento_id)
@@ -150,7 +149,9 @@ def reservar_seguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
         db.refresh(nueva_reserva)
 
         _invalidar_cache_vuelo(asiento)
-        logger.info(f"[SEGURO] Reserva {nueva_reserva.codigo_reserva} confirmada — Usuario {usuario_id}, Asiento {asiento_id}")
+        logger.info(
+            f"[SEGURO] Reserva {nueva_reserva.codigo_reserva} confirmada — Usuario {usuario_id}, Asiento {asiento_id}"
+        )
         return nueva_reserva
 
     except (AsientoNoEncontradoError, UsuarioNoEncontradoError, AsientoNoDisponibleError):
@@ -159,7 +160,7 @@ def reservar_seguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
     except IntegrityError:
         db.rollback()
         raise ReservaActivaDuplicadaError()
-    except Exception as e:
+    except Exception:
         db.rollback()
         logger.exception(f"Error inesperado al reservar asiento {asiento_id}")
         raise
@@ -168,6 +169,7 @@ def reservar_seguro(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
 # ════════════════════════════════════════════════════════════════
 #  FLUJO PROVISIONAL — Reserva temporal con TTL
 # ════════════════════════════════════════════════════════════════
+
 
 def reservar_provisional(db: Session, usuario_id: int, asiento_id: int) -> Reserva:
     """
@@ -178,12 +180,7 @@ def reservar_provisional(db: Session, usuario_id: int, asiento_id: int) -> Reser
     Inspirado en IATA NDC Offer Validity Windows.
     """
     try:
-        asiento = (
-            db.query(Asiento)
-            .filter(Asiento.id == asiento_id)
-            .with_for_update()
-            .first()
-        )
+        asiento = db.query(Asiento).filter(Asiento.id == asiento_id).with_for_update().first()
         if not asiento:
             raise AsientoNoEncontradoError(asiento_id)
 
@@ -192,7 +189,7 @@ def reservar_provisional(db: Session, usuario_id: int, asiento_id: int) -> Reser
         if asiento.estado != EstadoAsiento.DISPONIBLE:
             raise AsientoNoDisponibleError(asiento_id)
 
-        expiracion = datetime.datetime.utcnow() + datetime.timedelta(
+        expiracion = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) + datetime.timedelta(
             minutes=settings.provisional_ttl_minutes
         )
 
@@ -233,33 +230,26 @@ def reservar_provisional(db: Session, usuario_id: int, asiento_id: int) -> Reser
 #  CONFIRMAR y EXPIRAR reservas provisionales
 # ════════════════════════════════════════════════════════════════
 
+
 def confirmar_reserva(db: Session, reserva_id: int) -> Reserva:
     """
     Confirma una reserva provisional vigente.
 
     Si la reserva ha expirado, la cancela automáticamente y libera el asiento.
     """
-    reserva = (
-        db.query(Reserva)
-        .filter(Reserva.id == reserva_id)
-        .with_for_update()
-        .first()
-    )
+    reserva = db.query(Reserva).filter(Reserva.id == reserva_id).with_for_update().first()
     if not reserva:
         raise ReservaNoEncontradaError(reserva_id)
 
     if reserva.estado != EstadoReserva.PENDIENTE:
         raise ReservaNoModificableError(reserva_id)
 
-    asiento = (
-        db.query(Asiento)
-        .filter(Asiento.id == reserva.asiento_id)
-        .with_for_update()
-        .first()
-    )
+    asiento = db.query(Asiento).filter(Asiento.id == reserva.asiento_id).with_for_update().first()
 
     # Verificar expiración
-    if reserva.fecha_expiracion and reserva.fecha_expiracion <= datetime.datetime.utcnow():
+    if reserva.fecha_expiracion and reserva.fecha_expiracion <= datetime.datetime.now(datetime.UTC).replace(
+        tzinfo=None
+    ):
         reserva.estado = EstadoReserva.CANCELADA
         asiento.estado = EstadoAsiento.DISPONIBLE
         asiento.fecha_expiracion = None
@@ -284,7 +274,7 @@ def expirar_reservas(db: Session) -> dict:
 
     En producción, esto sería ejecutado por un cron job o un worker en segundo plano.
     """
-    ahora = datetime.datetime.utcnow()
+    ahora = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     pendientes = (
         db.query(Reserva)
         .filter(
@@ -297,12 +287,7 @@ def expirar_reservas(db: Session) -> dict:
 
     codigos_expirados = []
     for reserva in pendientes:
-        asiento = (
-            db.query(Asiento)
-            .filter(Asiento.id == reserva.asiento_id)
-            .with_for_update()
-            .first()
-        )
+        asiento = db.query(Asiento).filter(Asiento.id == reserva.asiento_id).with_for_update().first()
         reserva.estado = EstadoReserva.CANCELADA
         if asiento and asiento.estado == EstadoAsiento.RESERVADO_PROVISIONAL:
             asiento.estado = EstadoAsiento.DISPONIBLE

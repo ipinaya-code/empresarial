@@ -40,44 +40,57 @@ AEROPUERTOS = {
 
 # ── Rutas domésticas de BoA (basadas en operación real) ──────────
 RUTAS = [
-    ("VVI", "LPB", 55),     # Santa Cruz → La Paz (55 min)
-    ("LPB", "VVI", 55),     # La Paz → Santa Cruz
-    ("VVI", "CBB", 40),     # Santa Cruz → Cochabamba
-    ("CBB", "VVI", 40),     # Cochabamba → Santa Cruz
-    ("LPB", "CBB", 35),     # La Paz → Cochabamba
-    ("CBB", "LPB", 35),     # Cochabamba → La Paz
-    ("VVI", "SRE", 45),     # Santa Cruz → Sucre
-    ("VVI", "TJA", 50),     # Santa Cruz → Tarija
-    ("LPB", "ORU", 30),     # La Paz → Oruro
-    ("VVI", "TDD", 45),     # Santa Cruz → Trinidad
-    ("VVI", "CIJ", 90),     # Santa Cruz → Cobija
-    ("LPB", "SRE", 40),     # La Paz → Sucre
+    ("VVI", "LPB", 55),  # Santa Cruz → La Paz (55 min)
+    ("LPB", "VVI", 55),  # La Paz → Santa Cruz
+    ("VVI", "CBB", 40),  # Santa Cruz → Cochabamba
+    ("CBB", "VVI", 40),  # Cochabamba → Santa Cruz
+    ("LPB", "CBB", 35),  # La Paz → Cochabamba
+    ("CBB", "LPB", 35),  # Cochabamba → La Paz
+    ("VVI", "SRE", 45),  # Santa Cruz → Sucre
+    ("VVI", "TJA", 50),  # Santa Cruz → Tarija
+    ("LPB", "ORU", 30),  # La Paz → Oruro
+    ("VVI", "TDD", 45),  # Santa Cruz → Trinidad
+    ("VVI", "CIJ", 90),  # Santa Cruz → Cobija
+    ("LPB", "SRE", 40),  # La Paz → Sucre
 ]
 
 # ── Horarios de salida realistas ──────────────────────────────────
 HORARIOS = [
-    (6, 0),    # 06:00 — Primer vuelo
-    (8, 30),   # 08:30 — Mañana
-    (12, 0),   # 12:00 — Mediodía
+    (6, 0),  # 06:00 — Primer vuelo
+    (8, 30),  # 08:30 — Mañana
+    (12, 0),  # 12:00 — Mediodía
     (15, 30),  # 15:30 — Tarde
-    (19, 0),   # 19:00 — Noche
+    (19, 0),  # 19:00 — Noche
 ]
 
 # ── Pasajeros bolivianos simulados ────────────────────────────────
 NOMBRES_BOLIVIANOS = [
-    ("Carlos", "Mamani"), ("María", "Quispe"), ("Juan", "Condori"),
-    ("Ana", "Choque"), ("Pedro", "Flores"), ("Lucía", "Huanca"),
-    ("Roberto", "Alanoca"), ("Sofía", "Poma"), ("Diego", "Gutiérrez"),
-    ("Valentina", "Morales"), ("Andrés", "Ticona"), ("Camila", "Apaza"),
-    ("Fernando", "Callisaya"), ("Isabella", "Limachi"), ("Gabriel", "Copa"),
-    ("Daniela", "Colque"), ("Mateo", "Yujra"), ("Paula", "Nina"),
-    ("Sebastián", "Tarqui"), ("Mariana", "Machaca"),
+    ("Carlos", "Mamani"),
+    ("María", "Quispe"),
+    ("Juan", "Condori"),
+    ("Ana", "Choque"),
+    ("Pedro", "Flores"),
+    ("Lucía", "Huanca"),
+    ("Roberto", "Alanoca"),
+    ("Sofía", "Poma"),
+    ("Diego", "Gutiérrez"),
+    ("Valentina", "Morales"),
+    ("Andrés", "Ticona"),
+    ("Camila", "Apaza"),
+    ("Fernando", "Callisaya"),
+    ("Isabella", "Limachi"),
+    ("Gabriel", "Copa"),
+    ("Daniela", "Colque"),
+    ("Mateo", "Yujra"),
+    ("Paula", "Nina"),
+    ("Sebastián", "Tarqui"),
+    ("Mariana", "Machaca"),
 ]
 
 # ── Configuración Boeing 737-300 ──────────────────────────────────
 COLUMNAS_737 = ["A", "B", "C", "D", "E", "F"]  # 6 asientos por fila (3-3)
-FILAS_EJECUTIVA = range(1, 4)     # Filas 1-3 (18 asientos ejecutiva)
-FILAS_ECONOMICA = range(4, 23)    # Filas 4-22 (114 asientos económica)
+FILAS_EJECUTIVA = range(1, 4)  # Filas 1-3 (18 asientos ejecutiva)
+FILAS_ECONOMICA = range(4, 23)  # Filas 4-22 (114 asientos económica)
 CAPACIDAD_TOTAL_737 = len(FILAS_EJECUTIVA) * len(COLUMNAS_737) + len(FILAS_ECONOMICA) * len(COLUMNAS_737)
 
 

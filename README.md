@@ -67,19 +67,47 @@ make seed
 xdg-open http://localhost:8000/docs
 ```
 
-### Sin Docker (desarrollo local)
+### Sin Docker (desarrollo local detallado)
 
+Para desarrollar localmente sin Docker Compose, sigue estos pasos:
+
+1. **Clonar y preparar el entorno virtual:**
 ```bash
-# 1. Configurar entorno
-make setup
+git clone https://github.com/ipinaya-code/empresarial.git
+cd empresarial
+python3 -m venv .venv
 source .venv/bin/activate
-cp .env.example .env
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
 
-# 2. Iniciar PostgreSQL (requiere instancia local o contenedor)
+2. **Configurar variables de entorno:**
+```bash
+cp .env.example .env
+# Edita .env si es necesario para ajustar los accesos locales
+```
+
+3. **Iniciar servicios dependientes:**
+```bash
+# Iniciar PostgreSQL localmente
 make db-start
 
-# 3. Iniciar la API
+# (Opcional) Si necesitas Valkey/Redis para la caché
+docker run -d --name boa-valkey -p 6379:6379 valkey/valkey:7.2
+```
+
+4. **Ejecutar migraciones y semilla de datos (si usas Alembic en el futuro):**
+```bash
+# Por ahora el seed inicializa directamente usando el backend
 make run
+# Y en otra terminal:
+make seed
+```
+
+5. **Iniciar la API:**
+```bash
+make run
+# La API estará disponible en http://localhost:8000
 ```
 
 ## 🏗️ Arquitectura
@@ -248,6 +276,17 @@ El seed genera datos realistas basados en la operación real de BoA:
 | [Protocolo de Estrés](docs/protocolo_pruebas_estres.md) | SLAs, rampas de carga, criterios |
 | [Evidencia de Pruebas](docs/evidencia_pruebas.md) | Cómo ejecutar y validar |
 | [Guía de Logs](docs/como_generar_logs.md) | Generación de evidencia |
+
+## 🛠️ Cómo Extender e Implementar Nuevas Funcionalidades
+
+Si deseas continuar el desarrollo o implementar nuevas características:
+
+1. **Crear nuevos Modelos (`app/models/`)**: Define tus entidades de SQLAlchemy. Recuerda que si manejas concurrencia, usarás bloqueos o CQRS.
+2. **Definir Schemas (`app/schemas/`)**: Usa Pydantic (V2 con `model_config`) para validar la entrada (Create) y salida (Response).
+3. **Lógica en Servicios (`app/services/`)**: Coloca aquí la lógica de negocio, transacciones, y llamadas a caché. Mantén los Routers limpios.
+4. **Endpoints en Routers (`app/api/v1/`)**: Expón tus servicios mediante FastAPI. 
+5. **Escribir Tests (`tests/`)**: Añade tests unitarios (sin DB) o de integración (con BD usando el `TestClient`).
+6. **Formateo y Linting**: Antes de hacer commit, ejecuta `make format` y `make lint`.
 
 ## 🤝 Contribuir
 

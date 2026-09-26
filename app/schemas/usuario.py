@@ -1,6 +1,6 @@
 """Schemas de validación para Usuario / Pasajero."""
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UsuarioCreate(BaseModel):
@@ -27,5 +27,4 @@ class UsuarioResponse(BaseModel):
     telefono: str | None = None
     nacionalidad: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

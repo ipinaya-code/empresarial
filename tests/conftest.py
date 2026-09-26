@@ -29,11 +29,11 @@ from sqlalchemy.pool import StaticPool
 
 # Limpiar la caché de settings para que tome las nuevas env vars
 from app.core.config import get_settings
+
 get_settings.cache_clear()
 
 from app.db.session import Base, get_db
 from app.main import app
-
 
 # ── Base de datos de test (SQLite in-memory) ──────────────────
 SQLALCHEMY_TEST_URL = "sqlite://"
@@ -43,6 +43,7 @@ test_engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
+
 
 # SQLite no soporta enums nativos de PostgreSQL, este handler
 # permite que funcione con nuestros Enum de SQLAlchemy

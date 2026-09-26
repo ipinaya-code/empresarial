@@ -83,12 +83,14 @@ def create_app() -> FastAPI:
     # ── Retrocompatibilidad: montar endpoints en la raíz ─────
     # Para que los tests existentes sigan funcionando
     from app.api.v1.admin import router as admin_compat
+    from app.api.v1.health import router as health_compat
     from app.api.v1.reservas import router as reservas_compat
     from app.api.v1.vuelos import router as vuelos_compat
-    from app.api.v1.health import router as health_compat
 
     application.include_router(admin_compat, prefix="/admin", tags=["Retrocompatibilidad"], include_in_schema=False)
-    application.include_router(reservas_compat, prefix="/reservar", tags=["Retrocompatibilidad"], include_in_schema=False)
+    application.include_router(
+        reservas_compat, prefix="/reservar", tags=["Retrocompatibilidad"], include_in_schema=False
+    )
     application.include_router(vuelos_compat, prefix="/vuelos", tags=["Retrocompatibilidad"], include_in_schema=False)
     application.include_router(health_compat, tags=["Retrocompatibilidad"], include_in_schema=False)
 

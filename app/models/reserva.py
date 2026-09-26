@@ -18,9 +18,9 @@ from app.db.session import Base
 class EstadoReserva(enum.Enum):
     """Estados del ciclo de vida de una reserva."""
 
-    PENDIENTE = "pendiente"          # Reserva provisional, esperando confirmación
-    CONFIRMADA = "confirmada"        # Reserva confirmada y asiento asignado
-    CANCELADA = "cancelada"          # Reserva cancelada (manual o por expiración)
+    PENDIENTE = "pendiente"  # Reserva provisional, esperando confirmación
+    CONFIRMADA = "confirmada"  # Reserva confirmada y asiento asignado
+    CANCELADA = "cancelada"  # Reserva cancelada (manual o por expiración)
 
 
 class Reserva(Base):

@@ -9,7 +9,6 @@ Simula el flujo real de un pasajero:
 5. Verificar que el asiento ya no está disponible
 """
 
-import pytest
 
 
 class TestUserJourney:
@@ -41,10 +40,13 @@ class TestUserJourney:
         asientos_antes = disp_data["asientos_disponibles"]
 
         # ── 3. Reserva provisional ────────────────────────────
-        prov = client.post("/reservar/provisional", json={
-            "usuario_id": usuario_id,
-            "asiento_id": asiento_id,
-        })
+        prov = client.post(
+            "/reservar/provisional",
+            json={
+                "usuario_id": usuario_id,
+                "asiento_id": asiento_id,
+            },
+        )
         assert prov.status_code == 200
         prov_data = prov.json()
         assert prov_data["estado"] == "pendiente"
@@ -69,10 +71,13 @@ class TestUserJourney:
         seed = client.post("/admin/seed").json()
 
         # Reserva directa segura
-        res = client.post("/reservar/seguro", json={
-            "usuario_id": seed["primer_usuario_id"],
-            "asiento_id": seed["primer_asiento_id"],
-        })
+        res = client.post(
+            "/reservar/seguro",
+            json={
+                "usuario_id": seed["primer_usuario_id"],
+                "asiento_id": seed["primer_asiento_id"],
+            },
+        )
         assert res.status_code == 200
         data = res.json()
         assert data["estado"] == "confirmada"
@@ -87,15 +92,21 @@ class TestUserJourney:
         asiento_id = seed["primer_asiento_id"]
 
         # Pasajero 1: reserva exitosa
-        res1 = client.post("/reservar/seguro", json={
-            "usuario_id": seed["primer_usuario_id"],
-            "asiento_id": asiento_id,
-        })
+        res1 = client.post(
+            "/reservar/seguro",
+            json={
+                "usuario_id": seed["primer_usuario_id"],
+                "asiento_id": asiento_id,
+            },
+        )
         assert res1.status_code == 200
 
         # Pasajero 2: debe fallar
-        res2 = client.post("/reservar/seguro", json={
-            "usuario_id": seed["primer_usuario_id"],
-            "asiento_id": asiento_id,
-        })
+        res2 = client.post(
+            "/reservar/seguro",
+            json={
+                "usuario_id": seed["primer_usuario_id"],
+                "asiento_id": asiento_id,
+            },
+        )
         assert res2.status_code in [400, 409]

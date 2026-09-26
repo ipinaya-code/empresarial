@@ -48,12 +48,10 @@ def consultar_disponibilidad(db: Session, vuelo_id: int) -> dict:
 
     # ── 3. Calcular disponibilidad por clase ───────────────────
     disponibles_ejecutiva = sum(
-        1 for a in asientos
-        if a.estado == EstadoAsiento.DISPONIBLE and a.clase == ClaseServicio.EJECUTIVA
+        1 for a in asientos if a.estado == EstadoAsiento.DISPONIBLE and a.clase == ClaseServicio.EJECUTIVA
     )
     disponibles_economica = sum(
-        1 for a in asientos
-        if a.estado == EstadoAsiento.DISPONIBLE and a.clase == ClaseServicio.ECONOMICA
+        1 for a in asientos if a.estado == EstadoAsiento.DISPONIBLE and a.clase == ClaseServicio.ECONOMICA
     )
     total_disponibles = disponibles_ejecutiva + disponibles_economica
 

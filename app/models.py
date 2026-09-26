@@ -1,24 +1,30 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Index, text
-from sqlalchemy.orm import relationship
-import enum
 import datetime
+import enum
+
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, text
+from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 class EstadoAsiento(enum.Enum):
     DISPONIBLE = "disponible"
     RESERVADO_PROVISIONAL = "reservado_provisional"
     CONFIRMADO = "confirmado"
 
+
 class EstadoReserva(enum.Enum):
     PENDIENTE = "pendiente"
     CONFIRMADA = "confirmada"
     CANCELADA = "cancelada"
+
 
 class Usuario(Base):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String, index=True)
     email = Column(String, unique=True, index=True)
+
 
 class Vuelo(Base):
     __tablename__ = "vuelos"
@@ -29,6 +35,7 @@ class Vuelo(Base):
     capacidad = Column(Integer)
     asientos = relationship("Asiento", back_populates="vuelo")
 
+
 class Asiento(Base):
     __tablename__ = "asientos"
     id = Column(Integer, primary_key=True, index=True)
@@ -37,6 +44,7 @@ class Asiento(Base):
     estado = Column(Enum(EstadoAsiento), default=EstadoAsiento.DISPONIBLE)
     fecha_expiracion = Column(DateTime, nullable=True)
     vuelo = relationship("Vuelo", back_populates="asientos")
+
 
 class Reserva(Base):
     __tablename__ = "reservas"

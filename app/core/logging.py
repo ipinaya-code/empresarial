@@ -31,9 +31,7 @@ def setup_logging() -> None:
 
     # Reducir verbosidad de librerías externas
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-    logging.getLogger("sqlalchemy.engine").setLevel(
-        logging.INFO if settings.debug else logging.WARNING
-    )
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO if settings.debug else logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
