@@ -57,9 +57,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: boa_test
+          POSTGRES_PASSWORD: boa_test_pass
+          POSTGRES_DB: boa_test_db
         ports:
           - 5455:5432
         options: >-
@@ -79,7 +79,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql+psycopg2://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5455/${{ env.POSTGRES_DB }}
+      DATABASE_URL: postgresql+psycopg2://boa_test:boa_test_pass@localhost:5455/boa_test_db
       VALKEY_URL: redis://localhost:6379/0
       APP_ENV: development
       SECURE_LOCK_DELAY_SECONDS: 2
