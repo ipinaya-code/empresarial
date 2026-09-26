@@ -135,9 +135,9 @@ make run
 ```
 
 Para diagramas detallados ver:
-- [Arquitectura del Sistema (C4)](docs/arquitectura_sistema.md)
-- [Diagrama ER Extendido](docs/diagrama_er.md)
-- [Diagramas de Secuencia](docs/diagrama_secuencia_reserva.md)
+- [Arquitectura del Sistema (C4)](docs/arquitectura/arquitectura_sistema.md)
+- [Diagrama ER Extendido](docs/diagramas/diagrama_er.md)
+- [Diagramas de Secuencia](docs/diagramas/diagrama_secuencia_reserva.md)
 
 ### Tecnologías
 
@@ -267,15 +267,16 @@ El seed genera datos realistas basados en la operación real de BoA:
 
 | Documento | Descripción |
 |-----------|-------------|
-| [Arquitectura del Sistema](docs/arquitectura_sistema.md) | Diagramas C4, CQRS, deployment |
-| [Diagrama ER](docs/diagrama_er.md) | Modelo de datos con campos IATA |
-| [Diagramas de Secuencia](docs/diagrama_secuencia_reserva.md) | Flujos seguro, provisional, inseguro |
-| [Arquitectura CQRS](docs/arquitectura_cqrs_objetivo_2.md) | Justificación del patrón CQRS |
-| [Estándares IATA](docs/investigacion_estandares_boa.md) | NDC, ONE Order, patrones de concurrencia |
-| [Plan de Ejecución](docs/plan_ejecucion_prototipo_boa.md) | Backlog completo por épica |
-| [Protocolo de Estrés](docs/protocolo_pruebas_estres.md) | SLAs, rampas de carga, criterios |
-| [Evidencia de Pruebas](docs/evidencia_pruebas.md) | Cómo ejecutar y validar |
-| [Guía de Logs](docs/como_generar_logs.md) | Generación de evidencia |
+| [Arquitectura del Sistema](docs/arquitectura/arquitectura_sistema.md) | Diagramas C4, CQRS, deployment |
+| [Diagrama ER](docs/diagramas/diagrama_er.md) | Modelo de datos con campos IATA |
+| [Diagramas de Secuencia](docs/diagramas/diagrama_secuencia_reserva.md) | Flujos seguro, provisional, inseguro |
+| [Arquitectura CQRS](docs/arquitectura/arquitectura_cqrs_objetivo_2.md) | Justificación del patrón CQRS |
+| [Estándares IATA](docs/planificacion/investigacion_estandares_boa.md) | NDC, ONE Order, patrones de concurrencia |
+| [Plan de Ejecución](docs/planificacion/plan_ejecucion_prototipo_boa.md) | Backlog completo por épica |
+| [Protocolo de Estrés](docs/testing/protocolo_pruebas_estres.md) | SLAs, rampas de carga, criterios |
+| [Evidencia de Pruebas](docs/testing/evidencia_pruebas.md) | Cómo ejecutar y validar |
+| [Guía de Logs](docs/testing/como_generar_logs.md) | Generación de evidencia |
+| [Plan Maestro BoA](docs/planificacion/plan_maestro_boa.md) | Planeación General |
 
 ## 🛠️ Cómo Extender e Implementar Nuevas Funcionalidades
 
