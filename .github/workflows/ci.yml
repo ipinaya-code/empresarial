@@ -6,9 +6,9 @@ name: CI — Lint, Test & Build
 
 on:
   push:
-    branches: [main, objetivo_2, "feature/**"]
+    branches: ["**"]
   pull_request:
-    branches: [main, objetivo_2]
+    branches: ["**"]
 
 env:
   PYTHON_VERSION: "3.11"
