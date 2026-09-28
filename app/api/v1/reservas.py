@@ -8,7 +8,7 @@ bloqueos pesimistas (SELECT FOR UPDATE) para prevenir condiciones de carrera.
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_demo
 from app.core.exceptions import BoABaseException, boa_exception_to_http
 from app.schemas.reserva import ReservaCreate, ReservaResponse
 from app.services.reserva_service import (
@@ -24,6 +24,7 @@ router = APIRouter()
 
 @router.post(
     "/inseguro",
+    dependencies=[Depends(require_demo)],
     response_model=ReservaResponse,
     summary="Reserva SIN control de concurrencia (demostración)",
     description=(
@@ -45,7 +46,7 @@ def inseguro(reserva: ReservaCreate, db: Session = Depends(get_db)):
     summary="Reserva CON bloqueo pesimista (SELECT FOR UPDATE)",
     description=(
         "✅ Endpoint seguro que usa SELECT ... FOR UPDATE para bloquear la fila "
-        "del asiento. Simula un procesamiento de 60 segundos manteniendo el bloqueo. "
+        "del asiento. La demora de demostración es configurable y está desactivada por defecto. "
         "Solo UNA solicitud puede confirmar; las demás esperan y reciben un error."
     ),
 )
@@ -59,11 +60,11 @@ def seguro(reserva: ReservaCreate, db: Session = Depends(get_db)):
 @router.post(
     "/provisional",
     response_model=ReservaResponse,
-    summary="Reserva provisional con TTL (IATA NDC Offer Window)",
+    summary="Reserva provisional con TTL de laboratorio",
     description=(
         "Crea una reserva temporal (PENDIENTE) con un TTL de 10 minutos. "
         "El asiento pasa a RESERVADO_PROVISIONAL. El pasajero debe confirmar "
-        "antes de que expire. Inspirado en IATA NDC Offer Validity Windows."
+        "antes de que expire. El plazo es una decisión del prototipo."
     ),
 )
 def provisional(reserva: ReservaCreate, db: Session = Depends(get_db)):
@@ -91,6 +92,7 @@ def confirmar(reserva_id: int, db: Session = Depends(get_db)):
 
 @router.post(
     "/expirar",
+    dependencies=[Depends(require_demo)],
     summary="Expirar reservas provisionales vencidas",
     description=(
         "Cancela todas las reservas provisionales cuyo TTL ha expirado "

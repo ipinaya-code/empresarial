@@ -1,3 +1,5 @@
+> Diseño futuro no implementado. No pertenece al cierre de O1/O2. Estados, boletos y rutas de este diagrama requieren especificación y pruebas antes de existir en la API.
+
 # Diagrama de Secuencia — Cancelación de Reserva
 
 Este flujo ilustra cómo una reserva es cancelada de manera segura, liberando el asiento y marcando el boleto como anulado.

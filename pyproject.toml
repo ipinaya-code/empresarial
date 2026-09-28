@@ -10,10 +10,10 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
 authors = [
-    {name = "Iver Pinaya", email = "iver.pinaya@boa.bo"},
-    {name = "Thiago Sossa", email = "thiago.sossa@boa.bo"},
-    {name = "Nataly Crespo", email = "nataly.crespo@boa.bo"},
-    {name = "Wilson Gonzales", email = "wilson.gonzales@boa.bo"},
+    {name = "Iver Pinaya"},
+    {name = "Thiago Sossa"},
+    {name = "Nataly Crespo"},
+    {name = "Wilson Gonzales"},
 ]
 keywords = ["airline", "booking", "concurrency", "boa", "fastapi"]
 classifiers = [
@@ -49,6 +49,9 @@ dev = [
     "black>=24.1.0,<25.0.0",
     "httpx>=0.27.0,<1.0.0",
 ]
+browser = [
+    "pytest-playwright>=0.7,<1",
+]
 docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.5.0",
@@ -65,7 +68,7 @@ include = ["app*"]
 [tool.ruff]
 target-version = "py311"
 line-length = 120
-fix = true
+fix = false
 
 [tool.ruff.lint]
 select = [
@@ -135,6 +138,8 @@ markers = [
     "integration: Pruebas de integración con base de datos",
     "e2e: Pruebas de flujo completo end-to-end",
     "stress: Pruebas de carga y estrés",
+    "postgres: Requiere PostgreSQL real",
+    "browser: Requiere navegador Playwright",
     "slow: Pruebas que requieren más de 10 segundos",
 ]
 asyncio_mode = "auto"

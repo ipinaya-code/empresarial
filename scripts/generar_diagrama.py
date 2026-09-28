@@ -2,7 +2,6 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DIAGRAMS_DIR = PROJECT_ROOT / "docs" / "diagramas"
 DIAGRAMS_DIR.mkdir(parents=True, exist_ok=True)
@@ -46,7 +45,7 @@ def centered_text(box, text, text_font, fill=INK, spacing=6):
     heights = [draw.textbbox((0, 0), line, font=text_font)[3] for line in lines]
     total = sum(heights) + spacing * (len(lines) - 1)
     y = (y1 + y2 - total) / 2
-    for line, height in zip(lines, heights):
+    for line, height in zip(lines, heights, strict=True):
         width = draw.textbbox((0, 0), line, font=text_font)[2]
         draw.text(((x1 + x2 - width) / 2, y), line, font=text_font, fill=fill)
         y += height + spacing
@@ -72,6 +71,7 @@ def diamond(cx, cy, w, h, text, fill=YELLOW, outline=INK):
 def arrow(x1, y1, x2, y2, label=None, color=INK):
     draw.line((x1, y1, x2, y2), fill=color, width=5)
     import math
+
     angle = math.atan2(y2 - y1, x2 - x1)
     length = 20
     spread = 0.55
@@ -82,7 +82,11 @@ def arrow(x1, y1, x2, y2, label=None, color=INK):
         lx, ly = (x1 + x2) // 2, (y1 + y2) // 2
         bounds = draw.textbbox((0, 0), label, font=tiny_font)
         pad = 8
-        draw.rounded_rectangle((lx - (bounds[2] - bounds[0]) // 2 - pad, ly - 18, lx + (bounds[2] - bounds[0]) // 2 + pad, ly + 18), radius=8, fill=BACKGROUND)
+        draw.rounded_rectangle(
+            (lx - (bounds[2] - bounds[0]) // 2 - pad, ly - 18, lx + (bounds[2] - bounds[0]) // 2 + pad, ly + 18),
+            radius=8,
+            fill=BACKGROUND,
+        )
         draw.text((lx - (bounds[2] - bounds[0]) // 2, ly - 13), label, font=tiny_font, fill=color)
 
 
@@ -93,7 +97,9 @@ def section(x, y, w, text, color):
 
 # Header
 centered_text((100, 50, WIDTH - 100, 150), "Diagrama de flujo del sistema de reserva de vuelos", title_font)
-centered_text((150, 145, WIDTH - 150, 205), "FastAPI + SQLAlchemy + PostgreSQL | Control de concurrencia", small_font, MUTED)
+centered_text(
+    (150, 145, WIDTH - 150, 205), "FastAPI + SQLAlchemy + PostgreSQL | Control de concurrencia", small_font, MUTED
+)
 
 # Main flow
 section(100, 250, 2000, "1. Flujo general de la API", BLUE_DARK)
@@ -191,7 +197,7 @@ def diagram_text(canvas_draw, bounds, text, text_font=box_font, fill=INK):
     heights = [canvas_draw.textbbox((0, 0), line, font=text_font)[3] for line in lines]
     total = sum(heights) + 5 * (len(lines) - 1)
     y = (y1 + y2 - total) / 2
-    for line, height in zip(lines, heights):
+    for line, height in zip(lines, heights, strict=True):
         width = canvas_draw.textbbox((0, 0), line, font=text_font)[2]
         canvas_draw.text(((x1 + x2 - width) / 2, y), line, font=text_font, fill=fill)
         y += height + 5
@@ -204,6 +210,7 @@ def diagram_box(canvas_draw, x, y, width, height, text, fill=WHITE, outline=INK,
 
 def diagram_arrow(canvas_draw, x1, y1, x2, y2, color=INK):
     import math
+
     canvas_draw.line((x1, y1, x2, y2), fill=color, width=5)
     angle = math.atan2(y2 - y1, x2 - x1)
     length = 20
@@ -216,23 +223,46 @@ def diagram_arrow(canvas_draw, x1, y1, x2, y2, color=INK):
 
 
 def create_er_diagram():
-    canvas, canvas_draw = make_diagram_canvas(2400, 1700, "Diagrama entidad-relación", "Modelo transaccional de reserva de vuelos")
+    canvas, canvas_draw = make_diagram_canvas(
+        2400, 1700, "Diagrama entidad-relación", "Modelo transaccional de reserva de vuelos"
+    )
     diagram_box(canvas_draw, 110, 360, 470, 430, "USUARIOS\n\nPK id\nnombre\nemail UNIQUE", fill=BLUE)
     diagram_box(canvas_draw, 965, 220, 470, 470, "VUELOS\n\nPK id\norigen\ndestino\nfecha\ncapacidad", fill=PURPLE)
-    diagram_box(canvas_draw, 1780, 360, 470, 500, "ASIENTOS\n\nPK id\nFK vuelo_id\nnumero\nestado\nfecha_expiracion", fill=GREEN)
-    diagram_box(canvas_draw, 965, 1030, 470, 500, "RESERVAS\n\nPK id\nFK usuario_id\nFK asiento_id\nfecha_reserva\nfecha_expiracion\nestado", fill=YELLOW)
+    diagram_box(
+        canvas_draw, 1780, 360, 470, 500, "ASIENTOS\n\nPK id\nFK vuelo_id\nnumero\nestado\nfecha_expiracion", fill=GREEN
+    )
+    diagram_box(
+        canvas_draw,
+        965,
+        1030,
+        470,
+        500,
+        "RESERVAS\n\nPK id\nFK usuario_id\nFK asiento_id\nfecha_reserva\nfecha_expiracion\nestado",
+        fill=YELLOW,
+    )
     diagram_arrow(canvas_draw, 1435, 455, 1780, 575)
     diagram_arrow(canvas_draw, 350, 790, 965, 1240)
     diagram_arrow(canvas_draw, 1780, 740, 1435, 1240)
     canvas_draw.text((1490, 490), "VUELO 1 ---- N ASIENTOS", font=small_font, fill=GREEN_DARK)
     canvas_draw.text((650, 1080), "USUARIO 1 ---- N RESERVAS", font=small_font, fill=BLUE_DARK)
     canvas_draw.text((1490, 1080), "ASIENTO 1 ---- N RESERVAS", font=small_font, fill=RED_DARK)
-    diagram_box(canvas_draw, 520, 1510, 1360, 100, "Regla: un asiento solo puede tener una reserva activa PENDIENTE o CONFIRMADA", fill=RED, text_font=small_font)
+    diagram_box(
+        canvas_draw,
+        520,
+        1510,
+        1360,
+        100,
+        "Regla: un asiento solo puede tener una reserva activa PENDIENTE o CONFIRMADA",
+        fill=RED,
+        text_font=small_font,
+    )
     canvas.save(DIAGRAMS_DIR / "diagrama_er_reserva_vuelos.png", "PNG", optimize=True)
 
 
 def create_sequence_diagram():
-    canvas, canvas_draw = make_diagram_canvas(2600, 2300, "Diagrama de secuencia de reserva segura", "SELECT FOR UPDATE y bloqueo de 1 minuto")
+    canvas, canvas_draw = make_diagram_canvas(
+        2600, 2300, "Diagrama de secuencia de reserva segura", "SELECT FOR UPDATE y bloqueo de 1 minuto"
+    )
     participants = [(170, "Cliente"), (760, "FastAPI"), (1430, "SQLAlchemy"), (2110, "PostgreSQL")]
     for x, name in participants:
         diagram_box(canvas_draw, x - 145, 220, 290, 90, name, fill=BLUE)
@@ -252,10 +282,21 @@ def create_sequence_diagram():
     for y, start, end, label in events:
         diagram_arrow(canvas_draw, start, y, end, y, BLUE_DARK)
         canvas_draw.text(((start + end) // 2, y - 35), label, font=tiny_font, fill=INK, anchor="mm")
-    diagram_box(canvas_draw, 420, 2180, 1760, 90, "Las demás solicitudes esperan el desbloqueo y reciben 400 si el asiento ya no está disponible", fill=RED, text_font=small_font)
+    diagram_box(
+        canvas_draw,
+        420,
+        2180,
+        1760,
+        90,
+        "Las demás solicitudes esperan el desbloqueo y reciben 400 si el asiento ya no está disponible",
+        fill=RED,
+        text_font=small_font,
+    )
     canvas.save(DIAGRAMS_DIR / "diagrama_secuencia_reserva_vuelos.png", "PNG", optimize=True)
 
 
 create_er_diagram()
 create_sequence_diagram()
-print("Creados: diagrama_flujo_reserva_vuelos.png, diagrama_er_reserva_vuelos.png, diagrama_secuencia_reserva_vuelos.png")
+print(
+    "Creados: diagrama_flujo_reserva_vuelos.png, diagrama_er_reserva_vuelos.png, diagrama_secuencia_reserva_vuelos.png"
+)

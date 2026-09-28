@@ -1,0 +1,114 @@
+.venv-tools/bin/python -m ruff check app tests scripts migrations
+All checks passed!
+.venv-tools/bin/python -m black --check app tests scripts migrations
+All done! ✨ 🍰 ✨
+50 files would be left unchanged.
+.venv-tools/bin/python scripts/check_docs.py
+Enlaces locales válidos en 26 documentos
+.venv-tools/bin/python -m pytest -m 'not postgres and not browser' --junitxml=artifacts/pytest-sqlite.xml
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-8.4.2, pluggy-1.6.0 -- /home/leonidas/SSD500/Develoment/empresarial/.venv-tools/bin/python
+cachedir: .pytest_cache
+rootdir: /home/leonidas/SSD500/Develoment/empresarial
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1, platformdirs-4.12.0, asyncio-0.26.0, base-url-2.1.0, cov-5.0.0, playwright-0.9.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 46 items / 10 deselected / 36 selected
+
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_completo_reserva_provisional PASSED [  2%]
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_reserva_segura_directa PASSED [  5%]
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_doble_reserva_mismo_asiento PASSED [  8%]
+tests/integration/test_endpoints.py::TestHealthEndpoints::test_health_basic PASSED [ 11%]
+tests/integration/test_endpoints.py::TestAdminEndpoints::test_seed_crea_datos PASSED [ 13%]
+tests/integration/test_endpoints.py::TestAdminEndpoints::test_seed_idempotente PASSED [ 16%]
+tests/integration/test_endpoints.py::TestAdminEndpoints::test_reset_limpia_reservas PASSED [ 19%]
+tests/integration/test_endpoints.py::TestReservaInsegura::test_reserva_insegura_exitosa PASSED [ 22%]
+tests/integration/test_endpoints.py::TestReservaInsegura::test_reserva_insegura_asiento_inexistente PASSED [ 25%]
+tests/integration/test_endpoints.py::TestReservaInsegura::test_reserva_insegura_usuario_inexistente PASSED [ 27%]
+tests/integration/test_endpoints.py::TestReservaSegura::test_reserva_segura_exitosa PASSED [ 30%]
+tests/integration/test_endpoints.py::TestReservaSegura::test_reserva_segura_asiento_no_disponible PASSED [ 33%]
+tests/integration/test_endpoints.py::TestReservaProvisional::test_crear_reserva_provisional PASSED [ 36%]
+tests/integration/test_endpoints.py::TestReservaProvisional::test_confirmar_reserva_provisional PASSED [ 38%]
+tests/integration/test_endpoints.py::TestReservaProvisional::test_confirmar_reserva_inexistente PASSED [ 41%]
+tests/integration/test_endpoints.py::TestReservaProvisional::test_expirar_sin_reservas_pendientes PASSED [ 44%]
+tests/integration/test_endpoints.py::TestValidacionPayload::test_payload_vacio PASSED [ 47%]
+tests/integration/test_endpoints.py::TestValidacionPayload::test_usuario_id_negativo PASSED [ 50%]
+tests/integration/test_endpoints.py::TestValidacionPayload::test_asiento_id_cero PASSED [ 52%]
+tests/integration/test_foundation.py::test_baseline_refactored_same_contract PASSED [ 55%]
+tests/integration/test_foundation.py::test_demo_routes_disabled[/api/v1/admin/reset] PASSED [ 58%]
+tests/integration/test_foundation.py::test_demo_routes_disabled[/admin/seed] PASSED [ 61%]
+tests/integration/test_foundation.py::test_demo_routes_disabled[/reservar/inseguro] PASSED [ 63%]
+tests/integration/test_foundation.py::test_demo_routes_disabled[/api/v1/reservar/expirar] PASSED [ 66%]
+tests/integration/test_foundation.py::test_production_blocks_demo_even_when_flag_enabled PASSED [ 69%]
+tests/integration/test_foundation.py::test_readiness_returns_503_without_database PASSED [ 72%]
+tests/unit/test_models.py::TestEstadoAsiento::test_valores_definidos PASSED [ 75%]
+tests/unit/test_models.py::TestEstadoAsiento::test_total_estados PASSED  [ 77%]
+tests/unit/test_models.py::TestEstadoReserva::test_valores_definidos PASSED [ 80%]
+tests/unit/test_models.py::TestEstadoReserva::test_total_estados PASSED  [ 83%]
+tests/unit/test_models.py::TestClaseServicio::test_valores_definidos PASSED [ 86%]
+tests/unit/test_schemas.py::TestReservaCreate::test_crear_reserva_valida PASSED [ 88%]
+tests/unit/test_schemas.py::TestReservaCreate::test_usuario_id_debe_ser_positivo PASSED [ 91%]
+tests/unit/test_schemas.py::TestReservaCreate::test_asiento_id_debe_ser_positivo PASSED [ 94%]
+tests/unit/test_schemas.py::TestReservaCreate::test_campos_obligatorios PASSED [ 97%]
+tests/unit/test_schemas.py::TestReservaCreate::test_no_acepta_strings PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv-tools/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/leonidas/SSD500/Develoment/empresarial/.venv-tools/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_completo_reserva_provisional
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_reserva_segura_directa
+tests/e2e/test_user_journey.py::TestUserJourney::test_flujo_doble_reserva_mismo_asiento
+tests/integration/test_endpoints.py::TestReservaInsegura::test_reserva_insegura_exitosa
+tests/integration/test_endpoints.py::TestReservaSegura::test_reserva_segura_exitosa
+tests/integration/test_endpoints.py::TestReservaSegura::test_reserva_segura_asiento_no_disponible
+tests/integration/test_endpoints.py::TestReservaProvisional::test_crear_reserva_provisional
+tests/integration/test_endpoints.py::TestReservaProvisional::test_confirmar_reserva_provisional
+  /home/leonidas/SSD500/Develoment/empresarial/.venv-tools/lib/python3.12/site-packages/sqlalchemy/sql/schema.py:4296: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore[call-arg, no-any-return, no-untyped-call]  # noqa: E501
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/leonidas/SSD500/Develoment/empresarial/artifacts/pytest-sqlite.xml -
+
+---------- coverage: platform linux, python 3.12.14-final-0 ----------
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+app/__init__.py                              0      0   100%
+app/api/__init__.py                          0      0   100%
+app/api/deps.py                              8      0   100%
+app/api/v1/__init__.py                       0      0   100%
+app/api/v1/admin.py                         11      0   100%
+app/api/v1/health.py                        25      7    72%   27-33
+app/api/v1/reservas.py                      34      2    94%   73-74
+app/api/v1/router.py                        10      0   100%
+app/api/v1/vuelos.py                        14      2    86%   35-36
+app/core/__init__.py                         2      0   100%
+app/core/config.py                          48      2    96%   69, 71
+app/core/exceptions.py                      38      5    87%   45, 75, 85, 95, 105
+app/core/logging.py                         12      0   100%
+app/db/__init__.py                           0      0   100%
+app/db/cache.py                             58     32    45%   40-49, 57-64, 72-78, 86-92
+app/db/session.py                           12      4    67%   31-35
+app/main.py                                 34      2    94%   30, 72
+app/models/__init__.py                       5      0   100%
+app/models/asiento.py                       27      1    96%   77
+app/models/reserva.py                       23      1    96%   74
+app/models/usuario.py                       16      1    94%   43
+app/models/vuelo.py                         19      1    95%   70
+app/schemas/__init__.py                      5      0   100%
+app/schemas/asiento.py                       9      0   100%
+app/schemas/reserva.py                      14      0   100%
+app/schemas/usuario.py                      19      0   100%
+app/schemas/vuelo.py                        31      0   100%
+app/services/__init__.py                     0      0   100%
+app/services/disponibilidad_service.py      27      3    89%   38-39, 46
+app/services/reserva_service.py            141     40    72%   80, 102-104, 125, 160-166, 185, 190, 217-226, 245, 253-259, 291-296, 300-301
+app/services/seed_service.py                77      3    96%   108-109, 201
+----------------------------------------------------------------------
+TOTAL                                      719    106    85%
+Coverage HTML written to dir htmlcov
+
+Required test coverage of 70.0% reached. Total coverage: 85.26%
+================ 36 passed, 10 deselected, 9 warnings in 6.80s =================

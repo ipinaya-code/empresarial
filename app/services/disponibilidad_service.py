@@ -9,6 +9,7 @@ en PostgreSQL.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.exceptions import VueloNoEncontradoError
 from app.core.logging import get_logger
 from app.db.cache import cache_get, cache_set
@@ -44,7 +45,10 @@ def consultar_disponibilidad(db: Session, vuelo_id: int) -> dict:
     if not vuelo:
         raise VueloNoEncontradoError(vuelo_id)
 
-    asientos = db.query(Asiento).filter(Asiento.vuelo_id == vuelo_id).all()
+    # Baseline reproduce la materialización ORM anterior. Mismo contrato y dataset.
+    columns = (Asiento.id, Asiento.numero, Asiento.fila, Asiento.columna, Asiento.clase, Asiento.estado)
+    query = db.query(Asiento) if get_settings().read_mode == "baseline" else db.query(*columns)
+    asientos = query.filter(Asiento.vuelo_id == vuelo_id).order_by(Asiento.id).all()
 
     # ── 3. Calcular disponibilidad por clase ───────────────────
     disponibles_ejecutiva = sum(

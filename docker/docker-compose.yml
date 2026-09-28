@@ -1,84 +1,55 @@
-# ─────────────────────────────────────────────────────────────
-# Docker Compose — Sistema de Reservas BoA
-# Entorno completo: PostgreSQL + Valkey + API
-# ─────────────────────────────────────────────────────────────
-
+# Laboratorio local. No es un manifiesto de producción.
+name: empresarial
 services:
-  # ── PostgreSQL 15 ────────────────────────────────────────────
   db:
-    image: docker.io/library/postgres:15
-    container_name: boa-postgres
+    image: docker.io/library/postgres:15-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-boa_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boa_s3cur3_p4ss}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-lab-only}
       POSTGRES_DB: ${POSTGRES_DB:-boa_reservas}
     ports:
-      - "${POSTGRES_PORT:-5455}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5455}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-boa_admin} -d ${POSTGRES_DB:-boa_reservas}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - boa-network
-
-  # ── Valkey 7.2 (Caché) ──────────────────────────────────────
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 3s
+      timeout: 3s
+      retries: 20
   valkey:
-    image: docker.io/valkey/valkey:7.2-alpine
-    container_name: boa-valkey
-    ports:
-      - "6379:6379"
-    volumes:
-      - valkey_data:/data
-    restart: unless-stopped
+    image: docker.io/valkey/valkey:8-alpine
+    # Solo accesible por la red interna de Compose.
     healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - boa-network
-
-  # ── API FastAPI ─────────────────────────────────────────────
+      test: [CMD, valkey-cli, ping]
+      interval: 3s
+      timeout: 3s
+      retries: 20
   api:
+    image: localhost/boa-reservas:dev
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: boa-api
     ports:
-      - "8000:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     environment:
-      - APP_ENV=development
-      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-boa_admin}:${POSTGRES_PASSWORD:-boa_s3cur3_p4ss}@db:5432/${POSTGRES_DB:-boa_reservas}
-      - VALKEY_URL=redis://valkey:6379/0
-      - LOG_LEVEL=INFO
-      - SECURE_LOCK_DELAY_SECONDS=60
-      - INSECURE_DELAY_SECONDS=0.5
+      APP_ENV: development
+      APP_DEBUG: "false"
+      DEMO_ROUTES_ENABLED: "true"
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-boa_admin}:${POSTGRES_PASSWORD:-local-lab-only}@db:5432/${POSTGRES_DB:-boa_reservas}
+      VALKEY_URL: redis://valkey:6379/0
+      CACHE_ENABLED: ${CACHE_ENABLED:-false}
+      READ_MODE: ${READ_MODE:-refactored}
+      SECURE_LOCK_DELAY_SECONDS: "0"
     depends_on:
       db:
         condition: service_healthy
       valkey:
         condition: service_healthy
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 15s
-      timeout: 10s
-      start_period: 20s
-      retries: 3
-    networks:
-      - boa-network
-
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    command: [sh, -c, 'alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2']
 volumes:
   db_data:
-    name: boa-postgres-data
-  valkey_data:
-    name: boa-valkey-data
-
-networks:
-  boa-network:
-    name: boa-network
-    driver: bridge

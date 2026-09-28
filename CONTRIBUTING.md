@@ -1,131 +1,24 @@
-# Guía de Contribución — Sistema de Reservas BoA
+# Contribución
 
-Gracias por contribuir al proyecto. Esta guía establece las convenciones del equipo para que todos los participantes puedan colaborar de forma eficiente.
-
-## 📋 Requisitos Previos
-
-- Python 3.11+
-- Docker o Podman
-- Git
-
-## 🚀 Configuración Inicial
+Trabajar desde la rama base acordada por el equipo; ramas `feat/`, `fix/`, `docs/` o `chore/`. No depender de una rama `objetivo_2` que puede no existir. Commits con prefijo descriptivo, por ejemplo `fix: proteger unicidad de reservas activas`.
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/ipinaya-code/empresarial.git
-cd empresarial
-
-# 2. Crear entorno virtual e instalar dependencias
-make setup
-
-# 3. Activar el entorno virtual
-source .venv/bin/activate
-
-# 4. Copiar la configuración de ejemplo
-cp .env.example .env
-
-# 5. Levantar el entorno Docker
-make compose-up
-
-# 6. Inicializar datos de demostración
-make seed
+make setup PYTHON=python3.12
+make format
+make check
+make test-postgres  # cuando cambia persistencia o concurrencia
 ```
 
-## 🌿 Flujo de Trabajo con Git
+No basta con SQLite para validar transacciones PostgreSQL. Ejecutar la base descartable del README y conservar JUnit. Para cambios de navegador: `make browser-install` y `make test-browser` con API levantada. Para cambios de rendimiento: comparar ambas variantes y conservar resultados crudos.
 
-### Branches
+Los cambios de esquema incluyen una migración revisada. Los cambios de alcance se reflejan en plan y matriz de trazabilidad. No marcar tareas completas por la sola existencia de un archivo, ni introducir métricas inventadas. Revisión por otro integrante antes de merge; configurar protección de rama y checks requeridos en GitHub al publicar.
 
-| Branch | Propósito |
-|--------|-----------|
-| `main` | Código estable y revisado |
-| `objetivo_2` | Rama de desarrollo para el objetivo 2 |
-| `feature/<nombre>` | Nuevas funcionalidades |
-| `fix/<nombre>` | Corrección de bugs |
-| `chore/<nombre>` | Mantenimiento, CI/CD, docs |
-
-### Convención de Commits
-
-Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: agregar endpoint de búsqueda de vuelos
-fix: corregir race condition en reserva provisional
-docs: actualizar diagrama de secuencia
-test: agregar tests de integración para expiración
-chore: actualizar dependencias de pip
-refactor: separar lógica de reservas en servicio
-```
-
-### Pull Requests
-
-1. Crear una branch desde `objetivo_2` (o `main`):
-   ```bash
-   git checkout -b feature/mi-feature objetivo_2
-   ```
-
-2. Hacer commits siguiendo la convención.
-
-3. Ejecutar linting y tests antes de push:
-   ```bash
-   make lint
-   make test
-   ```
-
-4. Crear el PR en GitHub y completar el template.
-
-## 📁 Estructura del Proyecto
-
-```
-app/
-├── core/          # Configuración, excepciones, logging
-├── models/        # Modelos SQLAlchemy (tablas de BD)
-├── schemas/       # Schemas Pydantic (validación de datos)
-├── services/      # Lógica de negocio
-├── api/v1/        # Routers de FastAPI (endpoints HTTP)
-├── db/            # Sesión de BD y caché Valkey
-└── main.py        # App factory
-```
-
-### ¿Dónde va cada cosa?
-
-| Cambio | Ubicación |
-|--------|-----------|
-| Nuevo campo en la BD | `app/models/` |
-| Validación de datos | `app/schemas/` |
-| Lógica de negocio | `app/services/` |
-| Nuevo endpoint HTTP | `app/api/v1/` |
-| Variable de config | `app/core/config.py` + `.env.example` |
-
-## 🧪 Tests
+Dependencias canónicas: `pyproject.toml`; regenerar locks con Python 3.12 y pip-tools 7.6.1:
 
 ```bash
-make test              # Todos los tests
-make test-unit         # Solo unitarios
-make test-integration  # Solo integración
-make test-e2e          # Solo end-to-end
-make stress-test       # Pruebas de carga (requiere k6)
+pip-compile --strip-extras -o requirements.lock pyproject.toml
+pip-compile --strip-extras --extra=dev -o requirements-dev.lock pyproject.toml
+pip-compile --strip-extras --extra=dev --extra=browser -o requirements-browser.lock pyproject.toml
 ```
 
-## 🎨 Estilo de Código
-
-- **Formatter:** Black (120 chars)
-- **Linter:** Ruff
-- **Type checker:** MyPy (opcional por ahora)
-
-```bash
-make format   # Formatear automáticamente
-make lint     # Verificar estilo
-```
-
-## 👥 Responsables por Área (CODEOWNERS)
-
-| Área | Responsable | Épica |
-|------|------------|-------|
-| Control transaccional, modelos, BD | Iver Pinaya | Epic 1 |
-| Arquitectura CQRS, API, DevOps | Thiago Sossa | Epic 2 |
-| Caché Valkey, configuración | Nataly Crespo | Epic 3 |
-| Tests, QA, pruebas de estrés | Wilson Gonzales | Epic 4 |
-
-## ❓ Preguntas
-
-Si tienes dudas sobre la arquitectura o el flujo de trabajo, consulta la documentación en `/docs/` o abre un Issue en GitHub.
+Verificar instalación en entorno limpio y correr CI. No editar locks a mano para cambiar versiones. Los rangos permiten planificar actualizaciones; las instalaciones usan versiones fijadas. Se conserva la licencia MIT que ya declaraba el proyecto; ver [LICENSE](LICENSE).

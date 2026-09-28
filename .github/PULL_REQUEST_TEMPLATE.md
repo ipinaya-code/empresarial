@@ -1,24 +1,15 @@
-## Descripción
-<!-- Describe brevemente los cambios realizados. -->
+## Problema y comportamiento resultante
 
-## Tipo de Cambio
-- [ ] 🐛 Bug fix
-- [ ] ✨ Nueva funcionalidad
-- [ ] 🔧 Refactorización
-- [ ] 📝 Documentación
-- [ ] 🧪 Tests
-- [ ] 🔨 Chore / Infraestructura
+<!-- Qué ocurre antes/después; objetivo y requisito (RF/RNF) relacionados. -->
 
-## Épica Relacionada
-<!-- Epic 1 (Transaccional), Epic 2 (CQRS), Epic 3 (Caché), Epic 4 (Estrés) -->
+## Validación
 
-## Checklist
-- [ ] Mi código sigue las convenciones del proyecto (Ruff + Black)
-- [ ] He añadido tests que cubren los cambios
-- [ ] Los tests existentes siguen pasando (`pytest`)
-- [ ] He actualizado la documentación si es necesario
-- [ ] Docker build funciona correctamente
-- [ ] He probado localmente con `make compose-up`
+<!-- Comandos ejecutados, resultado, entorno y enlaces a evidencia. SQLite no prueba locks de PostgreSQL. -->
 
-## Screenshots / Evidencia
-<!-- Si aplica, adjuntar capturas o logs. -->
+## Revisión
+
+- [ ] Alcance y documentación coherentes con las matrices.
+- [ ] Pruebas pertinentes ejecutadas, con limitaciones explícitas.
+- [ ] Migración y recuperación consideradas si cambia el esquema.
+- [ ] No se agregan secretos ni datos reales.
+- [ ] Evidencia medible; no se confunden metas con resultados.

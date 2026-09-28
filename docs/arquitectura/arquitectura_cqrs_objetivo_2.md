@@ -1,52 +1,21 @@
-# Objetivo 2: Refactorización y Soporte a Picos de Demanda (Patrón CQRS)
+# Objetivo 2: baseline y refactorización de disponibilidad
 
-## 1. Justificación de la Solución (Estándares Internacionales)
+Se conserva el contrato de disponibilidad y se comparan dos implementaciones seleccionadas al arranque mediante `READ_MODE`. Ambas consultan PostgreSQL sin locks de fila y con `CACHE_ENABLED=false`. La variante baseline reproduce la materialización ORM del servicio encontrado al iniciar esta revisión; no pretende reconstruir ni auditar el sistema de BoA.
 
-En sistemas de reservas de alta concurrencia (como el estándar de aerolíneas dictado por IATA o sistemas modernos de e-commerce), la mayor parte del tráfico corresponde a **búsqueda de disponibilidad** (consultas de lectura) y solo una fracción se convierte en reservas (transacciones de escritura).
-
-Si las lecturas y las escrituras compiten por los mismos recursos (y los mismos *locks* en la base de datos), un pico masivo de tráfico —por ejemplo, una promoción de "Vuelos Azules"— causará un colapso. 
-
-Para prevenirlo, hemos implementado el **Patrón CQRS (Command Query Responsibility Segregation)**:
-- **Commands (Escrituras):** (`/reservar/seguro` y `/reservar/provisional`) Mantienen el bloqueo estricto (`SELECT FOR UPDATE`) para asegurar la consistencia ACID.
-- **Queries (Lecturas):** (`/vuelos/{id}/disponibilidad`) Accede a los datos en modo solo-lectura, sin emitir *locks* pesimistas.
-
-## 2. Implementación del Endpoint de Lectura
-
-Se ha creado un nuevo endpoint en `app/main.py`:
-```http
-GET /vuelos/{vuelo_id}/disponibilidad
+```mermaid
+flowchart TB
+  R[GET disponibilidad] --> MODE{READ_MODE}
+  MODE -->|baseline| B[SELECT objetos ORM completos de asientos]
+  MODE -->|refactored| F[SELECT seis columnas necesarias]
+  B --> JSON[Contrato JSON compartido]
+  F --> JSON
+  W[POST reservar] --> TX[Servicio transaccional separado]
 ```
 
-**Características de este Endpoint:**
-1. **Desacoplado de transacciones mutables:** Solo emite consultas `SELECT` directas a la base de datos a través de SQLAlchemy.
-2. **Formato Optimizado:** Utiliza los schemas `AsientoResponse` y `VueloDisponibilidadResponse` (`app/schemas.py`) para formatear y calcular la capacidad en tiempo de ejecución sin recargar la base de datos.
-3. **Escalabilidad:** En un entorno de producción, este endpoint podría ser redirigido directamente a una Réplica de Lectura (Read-Replica) de PostgreSQL o alimentado por una Caché (Valkey) en la Épica 3, sin necesidad de modificar la lógica de los clientes.
+La refactorización evita construir entidades ORM de cada asiento y seleccionar campos que no se usan en el mapa. Se conserva el orden por ID y el cálculo de disponibilidad. No se atribuye una reducción de número de consultas: ambas variantes ejecutan consulta del vuelo y de sus asientos. La mejora esperada es menos trabajo de materialización; su magnitud se mide.
 
-## 3. Pruebas de Carga y Rendimiento (Protocolo K6)
+La separación de routers y servicios ya existía en el commit de entrada. No se inventa una arquitectura monolítica anterior ni se atribuye causalmente toda mejora a CQRS. El test de equivalencia compara JSON y el test PostgreSQL mantiene una escritura bloqueada mientras consulta disponibilidad.
 
-Para demostrar que la arquitectura soporta incrementos abruptos de tráfico sin congelar la operación, se diseñó un protocolo de pruebas utilizando la herramienta **grafana/k6**.
+El [protocolo](../testing/protocolo_pruebas_estres.md) fija las variables del experimento. El [informe](../entregables/objetivos_1_2.md) registra resultados, incluido cualquier umbral incumplido. Un nivel de 500 VU es una prueba de laboratorio, no una estimación documentada del tráfico institucional.
 
-El script se encuentra en `scripts/load_test_k6.js` y simula el siguiente escenario de tráfico:
-*   **0-10 seg:** Rampa de subida a 50 usuarios concurrentes.
-*   **10-40 seg:** Rampa de subida a 200 usuarios concurrentes.
-*   **40-70 seg:** Pico masivo simulando una campaña (500 usuarios concurrentes).
-
-### 3.1. Umbrales de Aceptación (SLAs Estándar)
-Se han configurado *thresholds* automáticos dentro del script basados en las mejores prácticas de disponibilidad web:
-- `http_req_duration`: El 95% de las solicitudes deben ser respondidas en menos de **200 milisegundos**.
-- `http_req_failed`: La tasa de fallos debe ser menor al **1%**.
-
-### 3.2. Ejecución de la Prueba
-Para ejecutar esta prueba de estrés, es necesario tener `k6` instalado en el sistema, y luego correr el siguiente comando mientras el contenedor o el servidor FastAPI esté levantado:
-
-```bash
-# Paso 1: Asegurarse de tener la BD poblada
-curl -X POST http://localhost:8000/seed
-
-# Paso 2: Ejecutar la prueba K6
-k6 run scripts/load_test_k6.js
-```
-
-## 4. Conclusión del Objetivo 2
-
-El sistema ha sido refactorizado separando responsabilidades, lo que significa que un fallo por saturación en la búsqueda de vuelos no afectará las transacciones de compra en curso. El código está listo, el script de estrés implementado, y el diseño alineado a los estándares de concurrencia y tolerancia a fallos.
+La variante final refactorizada también declara `VueloDisponibilidadResponse` para validar y serializar con Pydantic. Baseline conserva la serialización genérica anterior. Por tanto, el tratamiento experimental combina proyección SQL y serialización tipada; no se atribuye todo el efecto a una sola técnica. Cambiar `READ_MODE` requiere reiniciar la API.

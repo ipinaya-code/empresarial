@@ -1,0 +1,10 @@
+ asientos_restaurados 
+----------------------
+                 1584
+(1 row)
+
+ version_num 
+-------------
+ 0001
+(1 row)
+

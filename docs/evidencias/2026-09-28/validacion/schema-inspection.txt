@@ -1,0 +1,20 @@
+ vuelos 
+--------
+     12
+(1 row)
+
+ asientos 
+----------
+     1584
+(1 row)
+
+ version_num 
+-------------
+ 0001
+(1 row)
+
+                                                                                    indexdef                                                                                     
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ CREATE UNIQUE INDEX uq_reserva_asiento_activa ON public.reservas USING btree (asiento_id) WHERE (estado = ANY (ARRAY['PENDIENTE'::estadoreserva, 'CONFIRMADA'::estadoreserva]))
+(1 row)
+

@@ -1,9 +1,8 @@
 """
 Servicio de Seed — Datos de demostración realistas de BoA.
 
-Genera vuelos, asientos y pasajeros simulados basados en la operación
-real de Boliviana de Aviación:
-- Rutas domésticas reales (VVI↔LPB, VVI↔CBB, etc.)
+Genera fixtures académicos, sin representar la operación vigente de BoA:
+- Rutas domésticas sintéticas (VVI↔LPB, VVI↔CBB, etc.)
 - Aeropuertos con códigos IATA correctos
 - Configuración de asientos Boeing 737-300 (ejecutiva + económica)
 - Horarios realistas
@@ -38,7 +37,7 @@ AEROPUERTOS = {
     "SRZ": "Aeropuerto El Trompillo — Santa Cruz (doméstico)",
 }
 
-# ── Rutas domésticas de BoA (basadas en operación real) ──────────
+# ── Rutas domésticas elegidas para el experimento ──────────
 RUTAS = [
     ("VVI", "LPB", 55),  # Santa Cruz → La Paz (55 min)
     ("LPB", "VVI", 55),  # La Paz → Santa Cruz
@@ -205,7 +204,7 @@ def crear_datos_semilla(db: Session) -> dict:
         usuario = Usuario(
             nombre=nombre,
             apellido=apellido,
-            email=f"{nombre.lower()}.{apellido.lower()}@correo.bo",
+            email=f"{nombre.lower()}.{apellido.lower()}@example.test",
             documento_tipo="CI",
             documento_numero=doc,
             telefono=f"+591 7{random.randint(0, 9)}{random.randint(100000, 999999)}",

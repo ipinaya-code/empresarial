@@ -85,5 +85,6 @@ Index(
     "uq_reserva_asiento_activa",
     Reserva.asiento_id,
     unique=True,
-    postgresql_where=text("estado IN ('pendiente', 'confirmada')"),
+    postgresql_where=text("estado IN ('PENDIENTE', 'CONFIRMADA')"),
+    sqlite_where=text("estado IN ('PENDIENTE', 'CONFIRMADA')"),
 )

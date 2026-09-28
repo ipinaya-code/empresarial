@@ -26,11 +26,8 @@ async def lifespan(application: FastAPI):
     # ── Startup ───────────────────────────────────────────────
     setup_logging()
     # Crear tablas si no existen (en producción, usar Alembic)
-    if not settings.is_production:
-        try:
-            Base.metadata.create_all(bind=engine)
-        except Exception:
-            pass  # BD no disponible, se creará al conectar (tests usan override)
+    if settings.auto_create_schema and settings.app_env == "development":
+        Base.metadata.create_all(bind=engine)
     yield
     # ── Shutdown ──────────────────────────────────────────────
     engine.dispose()
@@ -45,7 +42,7 @@ def create_app() -> FastAPI:
             "Prototipo de sistema de reservas para Boliviana de Aviación (BoA).\n\n"
             "Demuestra el control de concurrencia transaccional al asignar asientos, "
             "utilizando bloqueo pesimista (SELECT FOR UPDATE), reservas provisionales "
-            "con TTL, patrón CQRS con caché Valkey, y estándares IATA.\n\n"
+            "con TTL y separación de lecturas/escrituras. Datos sintéticos; sin certificación IATA.\n\n"
             "**Arquitectura:** FastAPI + SQLAlchemy + PostgreSQL + Valkey\n\n"
             "**Equipo:** Iver Pinaya · Thiago Sossa · Nataly Crespo · Wilson Gonzales"
         ),

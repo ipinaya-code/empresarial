@@ -31,7 +31,7 @@ sequenceDiagram
     DB-->>ORM: Fila retornada a P1
     ORM-->>API: asiento.estado = 'disponible'
 
-    Note over API: Simulación de procesamiento (60s)
+    Note over API: Demora opcional de laboratorio; por defecto 0s
 
     API->>ORM: asiento.estado = 'confirmado'
     API->>ORM: INSERT reserva CONFIRMADA (PNR: BOA-X1Y2Z3)
@@ -81,13 +81,14 @@ sequenceDiagram
     alt Confirma dentro del plazo
         P->>API: POST /api/v1/reservar/1/confirmar
         API->>DB: SELECT reserva FOR UPDATE
+        API->>DB: SELECT asiento FOR UPDATE
         API->>DB: UPDATE reserva SET estado='confirmada'
         API->>DB: UPDATE asiento SET estado='confirmado'
         API->>DB: COMMIT
         API-->>P: ✅ HTTP 200 — Reserva confirmada
     else No confirma (TTL expira)
-        Note over API: Cron job o endpoint manual
-        API->>DB: SELECT reservas WHERE estado='pendiente'<br/>AND fecha_expiracion <= NOW()
+        Note over API: Endpoint manual; worker periódico pendiente
+        API->>DB: SELECT reservas FOR UPDATE WHERE estado='PENDIENTE'<br/>AND fecha_expiracion <= NOW()
         API->>DB: UPDATE reserva SET estado='cancelada'
         API->>DB: UPDATE asiento SET estado='disponible'
         API->>DB: COMMIT
@@ -135,3 +136,5 @@ sequenceDiagram
 
     Note over API,DB: Sin el índice único, AMBAS reservas se habrían persistido (sobreasignación)
 ```
+
+Los estados en minúsculas del esquema narrativo representan valores de dominio/JSON. En SQL los enums persisten nombres en mayúsculas. La invalidación ocurre solo si la caché está habilitada.

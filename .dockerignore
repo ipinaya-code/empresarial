@@ -19,3 +19,8 @@ PRACTICA EMPRESARIAL*/
 *.zip
 *.xlsx
 *.xlsm
+
+artifacts/
+.venv-*/
+.vagrant/
+*.db
