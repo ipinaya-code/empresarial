@@ -1,0 +1,128 @@
+<html><head><meta charset='utf-8'><style>body{font-family: Arial, sans-serif; padding: 20px;} table{border-collapse: collapse; width: 100%; margin-bottom: 30px; font-size: 14px;} th, td{border: 1px solid #ddd; padding: 8px;} th{background-color: #f2f2f2; text-align: left;} h2{color: #333;}</style></head><body>
+<h1>Matrices de Seguimiento y Evidencias</h1>
+<h2>Matriz 1: Seguimiento General</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Objetivo específico</th>
+      <th>Actividad</th>
+      <th>Evidencia</th>
+      <th>Dificultad</th>
+      <th>Acción</th>
+      <th>Responsable</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Incorporar una capa de memoria caché intermedia que procese las consultas masivas de disponibilidad de vuelos, reduciendo la saturación directa sobre el motor principal de la base de datos.</td>
+      <td>Se definió el uso de Redis como capa de caché, junto con políticas de TTL e invalidación por tipo de dato (itinerarios, horarios, tarifas) y la separación entre consultas de lectura y escritura.</td>
+      <td>○ PENDIENTE DE RESPALDO:<br>• Código de integración del caché Valkey (cache.py) con políticas de TTL.<br>• Servicio de disponibilidad optimizado consultando primero en caché.<br>• Infraestructura Vagrant y Docker Compose incluyendo el servicio Valkey.</td>
+      <td>Consistencia entre el caché y el estado real de las reservas es el principal riesgo técnico.<br>En producción requeriría integración con el motor de pagos, fuera del alcance del prototipo.<br>Se documenta como limitación del estudio.</td>
+      <td>Desplegar Redis en el entorno del prototipo.<br>Integrar consultas de disponibilidad y ejecutar prueba comparativa.<br>Fecha meta: 15/10/2026.</td>
+      <td>Nataly Crespo<br>Ingeniera de Software / DBA</td>
+      <td>Pendiente</td>
+    </tr>
+    <tr>
+      <td>Diseñar un protocolo de pruebas de estrés periódicas que simule escenarios masivos de compra, asegurando que el motor de reservas soporte futuras campañas sin congelar la base de datos.</td>
+      <td>Se establecieron los componentes del protocolo: métricas clave (latencia, tasa de errores, CPU/Memoria), flujo del usuario, herramientas (JMeter/K6), escenarios de alta concurrencia y criterios de fallo.</td>
+      <td>○ PENDIENTE DE RESPALDO:<br>• Documento formal de Protocolo de Pruebas de Estrés.<br>• Script completo en K6 (load_test_k6.js) con rampas y SLAs.<br>• Guía para la generación de logs (como_generar_logs.md).<br>• Plan Maestro y de Ejecución consolidados.</td>
+      <td>Sin datos históricos de tráfico de campañas reales de BoA (Vuelos Azules, etc.).<br>Los escenarios de carga se modelan con benchmarks públicos de aerolíneas de escala comparable.</td>
+      <td>Elaborar el documento formal del protocolo.<br>Desarrollar scripts K6/JMeter y fijar umbrales de concurrencia.<br>Fecha meta: 05/11/2026.</td>
+      <td>Wilson Gonzales<br>Líder de QA / Pruebas de rendimiento</td>
+      <td>Pendiente</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Matriz 2: Evidencias</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Evidencia</th>
+      <th>Objetivo relacionado</th>
+      <th>¿Qué demuestra?</th>
+      <th>Ubicación</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Diagrama ER del prototipo</td>
+      <td>Obj. 1 - Bloqueo transaccional</td>
+      <td>Estructura de BD: tablas de vuelos, asientos y reservas con soporte para concurrencia.</td>
+      <td>docs/diagramas/diagrama_er.md</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Diagramas de secuencia de reservas</td>
+      <td>Obj. 1 - Bloqueo transaccional</td>
+      <td>Flujos de bloqueo pesimista, reservas provisionales (TTL) y confirmaciones.</td>
+      <td>docs/diagramas/diagrama_secuencia_reserva.md</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Repositorio Git - Módulo transaccional</td>
+      <td>Obj. 1 - Bloqueo transaccional</td>
+      <td>Código fuente del bloqueo pesimista en PostgreSQL para evitar race conditions.</td>
+      <td>app/services/reserva_service.py</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Tests de concurrencia y endpoints</td>
+      <td>Obj. 1 - Bloqueo transaccional</td>
+      <td>Pruebas automatizadas (pytest) verificando la integridad de asignación única.</td>
+      <td>tests/test_concurrency.py</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Arquitectura C4 y CQRS</td>
+      <td>Obj. 2 - Validación de disponibilidad</td>
+      <td>Separación estratégica de operaciones de lectura rápida y escrituras transaccionales.</td>
+      <td>docs/arquitectura/arquitectura_sistema.md</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Separación de servicios (CQRS)</td>
+      <td>Obj. 2 - Validación de disponibilidad</td>
+      <td>Lógica desacoplada en el backend para manejar alta demanda de lectura sin afectar compras.</td>
+      <td>app/services/disponibilidad_service.py</td>
+      <td>Disponible</td>
+    </tr>
+    <tr>
+      <td>Capa de Caché Valkey implementada</td>
+      <td>Obj. 3 - Capa de caché</td>
+      <td>Implementación de caché con políticas TTL por tipo de dato para descongestionar la DB.</td>
+      <td>app/db/cache.py</td>
+      <td>○ Pendiente · Fecha meta: próxima entrega</td>
+    </tr>
+    <tr>
+      <td>Protocolo de Pruebas de Estrés</td>
+      <td>Obj. 4 - Protocolo de estrés</td>
+      <td>Definición de rampas de carga, métricas de éxito y criterios de falla para las simulaciones.</td>
+      <td>docs/testing/protocolo_pruebas_estres.md</td>
+      <td>○ Pendiente · Fecha meta: próxima entrega</td>
+    </tr>
+    <tr>
+      <td>Script de Pruebas de Carga K6</td>
+      <td>Obj. 4 - Protocolo de estrés</td>
+      <td>Código ejecutable para someter el servidor a tráfico concurrente simulando Vuelos Azules.</td>
+      <td>scripts/load_test_k6.js</td>
+      <td>○ Pendiente · Fecha meta: próxima entrega</td>
+    </tr>
+    <tr>
+      <td>Guía de Generación de Logs</td>
+      <td>Obj. 4 - Protocolo de estrés</td>
+      <td>Instrucciones de auditoría y captura de métricas durante la prueba de carga.</td>
+      <td>docs/testing/como_generar_logs.md</td>
+      <td>○ Pendiente · Fecha meta: próxima entrega</td>
+    </tr>
+    <tr>
+      <td>Plan Maestro de Ejecución</td>
+      <td>Todos los objetivos</td>
+      <td>Alineación del desarrollo con metodologías profesionales y objetivos del proyecto.</td>
+      <td>docs/planificacion/plan_maestro_boa.md</td>
+      <td>Disponible</td>
+    </tr>
+  </tbody>
+</table>
+</body></html>
