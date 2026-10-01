@@ -10,7 +10,7 @@ Fecha de revisión: 2026-09-27. Los Markdown actuales son la fuente técnica edi
 4. [Investigación](planificacion/investigacion_estandares_boa.md): fuentes primarias y alcance de cada referencia.
 5. [Arquitectura](arquitectura/arquitectura_sistema.md), [objetivo 2](arquitectura/arquitectura_cqrs_objetivo_2.md) y [decisiones](arquitectura/decisiones.md).
 6. [Backlog](planificacion/plan_ejecucion_prototipo_boa.md): mantenimiento entregado y trabajo restante.
-7. [Pruebas](testing/protocolo_pruebas_estres.md), [evidencias](testing/evidencia_pruebas.md) e [informe de objetivos 1 y 2](entregables/objetivos_1_2.md).
+7. [Pruebas](testing/protocolo_pruebas_estres.md), [evidencias](testing/evidencia_pruebas.md), [informe de objetivos 1 y 2](entregables/objetivos_1_2.md) y [matrices de seguimiento](entregables/matrices_seguimiento.md).
 8. [Despliegue y recuperación](operacion/despliegue.md), [riesgos](planificacion/riesgos_decisiones.md) y [seguridad](../SECURITY.md).
 
 ## Documentos originales

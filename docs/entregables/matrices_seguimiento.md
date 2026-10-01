@@ -1,0 +1,24 @@
+# Matrices de Seguimiento y Evidencias
+
+## Matriz 1: Seguimiento General
+
+| Objetivo específico | Actividad | Evidencia | Dificultad | Acción | Responsable | Estado |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Incorporar una capa de memoria caché intermedia que procese las consultas masivas de disponibilidad de vuelos, reduciendo la saturación directa sobre el motor principal de la base de datos. | Se definió el uso de Redis como capa de caché, junto con políticas de TTL e invalidación por tipo de dato (itinerarios, horarios, tarifas) y la separación entre consultas de lectura y escritura. | ○ PENDIENTE DE RESPALDO:<br>• Código de integración del caché Valkey (cache.py) con políticas de TTL.<br>• Servicio de disponibilidad optimizado consultando primero en caché.<br>• Infraestructura Vagrant y Docker Compose incluyendo el servicio Valkey. | Consistencia entre el caché y el estado real de las reservas es el principal riesgo técnico.<br>En producción requeriría integración con el motor de pagos, fuera del alcance del prototipo.<br>Se documenta como limitación del estudio. | Desplegar Redis en el entorno del prototipo.<br>Integrar consultas de disponibilidad y ejecutar prueba comparativa.<br>Fecha meta: 15/10/2026. | Nataly Crespo<br>Ingeniera de Software / DBA | Pendiente |
+| Diseñar un protocolo de pruebas de estrés periódicas que simule escenarios masivos de compra, asegurando que el motor de reservas soporte futuras campañas sin congelar la base de datos. | Se establecieron los componentes del protocolo: métricas clave (latencia, tasa de errores, CPU/Memoria), flujo del usuario, herramientas (JMeter/K6), escenarios de alta concurrencia y criterios de fallo. | ○ PENDIENTE DE RESPALDO:<br>• Documento formal de Protocolo de Pruebas de Estrés.<br>• Script completo en K6 (load_test_k6.js) con rampas y SLAs.<br>• Guía para la generación de logs (como_generar_logs.md).<br>• Plan Maestro y de Ejecución consolidados. | Sin datos históricos de tráfico de campañas reales de BoA (Vuelos Azules, etc.).<br>Los escenarios de carga se modelan con benchmarks públicos de aerolíneas de escala comparable. | Elaborar el documento formal del protocolo.<br>Desarrollar scripts K6/JMeter y fijar umbrales de concurrencia.<br>Fecha meta: 05/11/2026. | Wilson Gonzales<br>Líder de QA / Pruebas de rendimiento | Pendiente |
+
+## Matriz 2: Evidencias
+
+| Evidencia | Objetivo relacionado | ¿Qué demuestra? | Ubicación | Estado |
+| :--- | :--- | :--- | :--- | :--- |
+| Diagrama ER del prototipo | Obj. 1 - Bloqueo transaccional | Estructura de BD: tablas de vuelos, asientos y reservas con soporte para concurrencia. | docs/diagramas/diagrama_er.md | Disponible |
+| Diagramas de secuencia de reservas | Obj. 1 - Bloqueo transaccional | Flujos de bloqueo pesimista, reservas provisionales (TTL) y confirmaciones. | docs/diagramas/diagrama_secuencia_reserva.md | Disponible |
+| Repositorio Git - Módulo transaccional | Obj. 1 - Bloqueo transaccional | Código fuente del bloqueo pesimista en PostgreSQL para evitar race conditions. | app/services/reserva_service.py | Disponible |
+| Tests de concurrencia y endpoints | Obj. 1 - Bloqueo transaccional | Pruebas automatizadas (pytest) verificando la integridad de asignación única. | tests/test_concurrency.py | Disponible |
+| Arquitectura C4 y CQRS | Obj. 2 - Validación de disponibilidad | Separación estratégica de operaciones de lectura rápida y escrituras transaccionales. | docs/arquitectura/arquitectura_sistema.md | Disponible |
+| Separación de servicios (CQRS) | Obj. 2 - Validación de disponibilidad | Lógica desacoplada en el backend para manejar alta demanda de lectura sin afectar compras. | app/services/disponibilidad_service.py | Disponible |
+| Capa de Caché Valkey implementada | Obj. 3 - Capa de caché | Implementación de caché con políticas TTL por tipo de dato para descongestionar la DB. | app/db/cache.py | ○ Pendiente · Fecha meta: próxima entrega |
+| Protocolo de Pruebas de Estrés | Obj. 4 - Protocolo de estrés | Definición de rampas de carga, métricas de éxito y criterios de falla para las simulaciones. | docs/testing/protocolo_pruebas_estres.md | ○ Pendiente · Fecha meta: próxima entrega |
+| Script de Pruebas de Carga K6 | Obj. 4 - Protocolo de estrés | Código ejecutable para someter el servidor a tráfico concurrente simulando Vuelos Azules. | scripts/load_test_k6.js | ○ Pendiente · Fecha meta: próxima entrega |
+| Guía de Generación de Logs | Obj. 4 - Protocolo de estrés | Instrucciones de auditoría y captura de métricas durante la prueba de carga. | docs/testing/como_generar_logs.md | ○ Pendiente · Fecha meta: próxima entrega |
+| Plan Maestro de Ejecución | Todos los objetivos | Alineación del desarrollo con metodologías profesionales y objetivos del proyecto. | docs/planificacion/plan_maestro_boa.md | Disponible |
