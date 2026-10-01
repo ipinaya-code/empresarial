@@ -42,3 +42,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 - Pruebas de carga con K6
 - Documentación y diagramas (ER, secuencia, flujo)
 - Docker Compose con PostgreSQL, Valkey y API
+
+## Unreleased — Base verificable O1/O2 (2026-09-28)
+
+- Restituido el alcance de las matrices: O3 caché, O4 estrés; añadidos metodología, trazabilidad, ADR, riesgos y operación.
+- Corregido el índice parcial de reservas activas, añadida unicidad de asiento/vuelo y migración Alembic inicial.
+- Pruebas de concurrencia sobre PostgreSQL real, control negativo aislado, expiración y readiness; fixtures ya no ocultan PG usando SQLite.
+- Baseline de lectura conservado y refactor con proyección de columnas y contrato de respuesta tipado; k6 conserva datos comparativos.
+- Podman por defecto, dependencias fijadas, rutas demo restringidas, CI renovado y smoke Playwright con Chromium.
+- Jenkins alternativo preparado; Vagrant opcional documentado; producción y aceptación académica sujetas a requisitos explícitos.
+- Retirados módulos/configuración duplicados y correos corporativos sin respaldo; añadido el texto de la licencia MIT ya declarada en el proyecto.

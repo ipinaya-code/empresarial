@@ -66,7 +66,7 @@ erDiagram
 
 3. **Códigos únicos**: `vuelos.codigo` y `reservas.codigo_reserva` son únicos globalmente.
 
-## Configuración del Boeing 737-300 de BoA
+## Configuración sintética del laboratorio (no acredita cabina de BoA)
 
 | Clase | Filas | Columnas | Asientos |
 |-------|-------|----------|----------|
@@ -86,3 +86,5 @@ erDiagram
 | ORU | Juan Mendoza | Oruro |
 | TDD | Teniente Jorge Henrich Arauz | Trinidad |
 | CIJ | Capitán Aníbal Arab | Cobija |
+
+El índice SQL usa `PENDIENTE` y `CONFIRMADA`, nombres de enum persistidos; los valores del JSON son minúsculas. Existe además unicidad `(vuelo_id, numero)` en asientos. Fechas almacenadas como UTC sin zona.

@@ -1,3 +1,5 @@
+> Diseño futuro no implementado. No pertenece al cierre de O1/O2. Estados, boletos y rutas de este diagrama requieren especificación y pruebas antes de existir en la API.
+
 # Diagramas de Secuencia — Check-in Web
 
 ## 1. Check-in Exitoso con Boarding Pass

@@ -8,17 +8,17 @@ En producción, estos endpoints estarían protegidos con autenticación.
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_demo
 from app.services.seed_service import crear_datos_semilla, resetear_datos
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_demo)])
 
 
 @router.post(
     "/seed",
     summary="Inicializar datos de demostración de BoA",
     description=(
-        "Crea vuelos con rutas domésticas reales de BoA (VVI↔LPB, VVI↔CBB, etc.), "
+        "Crea vuelos con rutas domésticas sintéticas (VVI↔LPB, VVI↔CBB, etc.), "
         "asientos con configuración Boeing 737-300 (ejecutiva + económica), "
         "y 20 pasajeros bolivianos simulados."
     ),

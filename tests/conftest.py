@@ -14,11 +14,13 @@ import os
 
 # ── Configurar entorno ANTES de cualquier import de la app ────
 os.environ["APP_ENV"] = "development"
-os.environ["DEBUG"] = "true"
-os.environ["SECURE_LOCK_DELAY_SECONDS"] = "1"
+os.environ["APP_DEBUG"] = "false"
+os.environ["DEMO_ROUTES_ENABLED"] = "true"
+os.environ["CACHE_ENABLED"] = "false"
+os.environ["SECURE_LOCK_DELAY_SECONDS"] = "0"
 os.environ["INSECURE_DELAY_SECONDS"] = "0.1"
 os.environ["PROVISIONAL_TTL_MINUTES"] = "1"
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["DATABASE_URL"] = os.getenv("TEST_DATABASE_URL", "sqlite:///./test.db")
 os.environ["VALKEY_URL"] = "redis://localhost:63999/0"  # Puerto inexistente a propósito
 
 import pytest
@@ -36,22 +38,21 @@ from app.db.session import Base, get_db
 from app.main import app
 
 # ── Base de datos de test (SQLite in-memory) ──────────────────
-SQLALCHEMY_TEST_URL = "sqlite://"
+SQLALCHEMY_TEST_URL = os.environ["DATABASE_URL"]
+if SQLALCHEMY_TEST_URL.startswith("postgresql"):
+    from sqlalchemy.engine import make_url
 
-test_engine = create_engine(
-    SQLALCHEMY_TEST_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+    if make_url(SQLALCHEMY_TEST_URL).database != "boa_test":
+        raise RuntimeError("TEST_DATABASE_URL debe apuntar a una base descartable llamada boa_test")
+    test_engine = create_engine(SQLALCHEMY_TEST_URL, pool_size=10, max_overflow=10)
+else:
+    if os.getenv("TEST_DATABASE_URL"):
+        raise RuntimeError("TEST_DATABASE_URL requiere PostgreSQL; no se sustituye por SQLite")
+    test_engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
-
-# SQLite no soporta enums nativos de PostgreSQL, este handler
-# permite que funcione con nuestros Enum de SQLAlchemy
-@event.listens_for(test_engine, "connect")
-def set_sqlite_pragma(dbapi_conn, connection_record):
-    cursor = dbapi_conn.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.close()
+    @event.listens_for(test_engine, "connect")
+    def set_sqlite_pragma(dbapi_conn, connection_record):
+        dbapi_conn.execute("PRAGMA foreign_keys=ON")
 
 
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
@@ -71,8 +72,11 @@ app.dependency_overrides[get_db] = override_get_db
 
 
 @pytest.fixture(autouse=True)
-def setup_db():
+def setup_db(request):
     """Crea/limpia las tablas antes de cada test."""
+    if request.node.get_closest_marker("browser"):
+        yield
+        return
     Base.metadata.create_all(bind=test_engine)
     yield
     Base.metadata.drop_all(bind=test_engine)
@@ -99,3 +103,14 @@ def seed_data(client):
     response = client.post("/admin/seed")
     assert response.status_code == 200
     return response.json()
+
+
+@pytest.fixture
+def db_session():
+    with TestSessionLocal() as db:
+        yield db
+
+
+@pytest.fixture
+def session_factory():
+    return TestSessionLocal

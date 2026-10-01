@@ -61,3 +61,9 @@ Thumbs.db
 # ── Archivos temporales del proyecto ─────────────────────────
 PRACTICA EMPRESARIAL-20260926T151958Z-1-001.zip
 PRACTICA EMPRESARIAL-20260926T151958Z-1-001/
+# Evidencia generada y entornos opcionales
+artifacts/
+.venv-*/
+.vagrant/
+test-results/
+playwright-report/

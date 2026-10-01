@@ -1,0 +1,20 @@
+BROWSER_API_URL='http://127.0.0.1:8000' .venv-tools/bin/python -m pytest tests/browser -m browser --no-cov --tracing=retain-on-failure --screenshot=only-on-failure --output=artifacts/playwright --junitxml=artifacts/playwright.xml
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-8.4.2, pluggy-1.6.0 -- /home/leonidas/SSD500/Develoment/empresarial/.venv-tools/bin/python
+cachedir: .pytest_cache
+rootdir: /home/leonidas/SSD500/Develoment/empresarial
+configfile: pyproject.toml
+plugins: anyio-4.15.1, platformdirs-4.12.0, asyncio-0.26.0, base-url-2.1.0, cov-5.0.0, playwright-0.9.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/browser/test_smoke.py::test_browser_can_reach_api[chromium] PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv-tools/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/leonidas/SSD500/Develoment/empresarial/.venv-tools/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/leonidas/SSD500/Develoment/empresarial/artifacts/playwright.xml -
+========================= 1 passed, 1 warning in 0.54s =========================

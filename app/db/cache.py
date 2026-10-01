@@ -18,25 +18,18 @@ logger = logging.getLogger("boa.cache")
 
 settings = get_settings()
 
-try:
-    valkey_client: redis.Redis | None = redis.from_url(
-        settings.valkey_url,
-        decode_responses=True,
-        socket_connect_timeout=3,
-        socket_timeout=3,
-        retry_on_timeout=True,
-    )
-    # Test de conexión al inicio
-    valkey_client.ping()
-    logger.info("Conexión a Valkey establecida correctamente")
-except Exception as e:
-    logger.warning(f"Valkey no disponible, la aplicación operará sin caché: {e}")
-    valkey_client = None
+# Construir el cliente no abre conexiones: cada operación puede recuperarse tras una caída.
+valkey_client: redis.Redis = redis.from_url(
+    settings.valkey_url,
+    decode_responses=True,
+    socket_connect_timeout=0.2,
+    socket_timeout=0.2,
+)
 
 
 def get_valkey() -> redis.Redis | None:
-    """Retorna el cliente Valkey o None si no está disponible."""
-    return valkey_client
+    """La caché es opcional y nunca arbitra la asignación de asientos."""
+    return valkey_client if settings.cache_enabled else None
 
 
 def cache_get(key: str) -> dict | None:

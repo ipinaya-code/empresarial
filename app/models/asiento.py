@@ -8,7 +8,7 @@ para el control de concurrencia.
 
 import enum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -34,6 +34,7 @@ class Asiento(Base):
     """Asiento individual perteneciente a un vuelo de BoA."""
 
     __tablename__ = "asientos"
+    __table_args__ = (UniqueConstraint("vuelo_id", "numero", name="uq_asiento_vuelo_numero"),)
 
     id = Column(Integer, primary_key=True, index=True)
     vuelo_id = Column(

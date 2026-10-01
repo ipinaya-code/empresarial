@@ -9,6 +9,7 @@ tenga su propia configuración local sin afectar al equipo.
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,13 +27,16 @@ class Settings(BaseSettings):
     app_name: str = "Sistema de Reservas BoA"
     app_version: str = "2.0.0"
     app_env: Literal["development", "staging", "production"] = "development"
-    debug: bool = True
+    debug: bool = Field(default=False, validation_alias="APP_DEBUG")
+    demo_routes_enabled: bool = False
+    auto_create_schema: bool = False
+    read_mode: Literal["baseline", "refactored"] = "refactored"
     log_level: str = "INFO"
     api_v1_prefix: str = "/api/v1"
 
     # ── PostgreSQL ──────────────────────────────────────────────
     postgres_user: str = "boa_admin"
-    postgres_password: str = "boa_s3cur3_p4ss"
+    postgres_password: str = "local-lab-only"
     postgres_db: str = "boa_reservas"
     postgres_host: str = "localhost"
     postgres_port: int = 5455
@@ -40,7 +44,8 @@ class Settings(BaseSettings):
 
     # ── Valkey / Redis (Caché) ──────────────────────────────────
     valkey_url: str = "redis://localhost:6379/0"
-    cache_ttl_seconds: int = 600
+    cache_enabled: bool = False
+    cache_ttl_seconds: int = Field(default=30, ge=1)
 
     # ── Seguridad ───────────────────────────────────────────────
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
@@ -48,9 +53,9 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:3000,http://localhost:8000"
 
     # ── Concurrencia (Simulación) ───────────────────────────────
-    secure_lock_delay_seconds: int = 60
+    secure_lock_delay_seconds: float = Field(default=0, ge=0, le=60)
     insecure_delay_seconds: float = 0.5
-    provisional_ttl_minutes: int = 10
+    provisional_ttl_minutes: int = Field(default=10, ge=1)
 
     # ── Rate Limiting ───────────────────────────────────────────
     rate_limit_per_minute: int = 60

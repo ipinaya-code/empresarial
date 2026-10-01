@@ -1,57 +1,33 @@
-"""
-Endpoints de Health Check.
-
-Endpoints para verificar el estado de la aplicación y sus dependencias.
-Usados por Docker Compose, Kubernetes, y el CI/CD.
-"""
+"""Liveness y readiness: PostgreSQL es obligatorio; Valkey es opcional."""
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.core.config import get_settings
 from app.db.cache import get_valkey
 
 router = APIRouter()
 
 
-@router.get("/health", summary="Health check básico")
+@router.get("/health", summary="Liveness")
 def health():
-    """Verifica que la API esté respondiendo."""
     return {"status": "ok", "service": "boa-reservas-api"}
 
 
-@router.get("/health/ready", summary="Readiness check completo")
+@router.get("/health/ready", summary="Readiness")
 def readiness(db: Session = Depends(get_db)):
-    """
-    Verifica que la API y todas sus dependencias estén operativas.
-
-    Comprueba:
-    - PostgreSQL: ejecuta un SELECT 1
-    - Valkey: ejecuta un PING
-    """
-    checks = {"api": "ok"}
-
-    # PostgreSQL
+    checks = {"postgresql": "ok", "valkey": "disabled"}
     try:
         db.execute(text("SELECT 1"))
-        checks["postgresql"] = "ok"
-    except Exception as e:
-        checks["postgresql"] = f"error: {e}"
-
-    # Valkey
-    valkey = get_valkey()
-    if valkey:
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "unavailable", "checks": {"postgresql": "error"}})
+    if get_settings().cache_enabled:
         try:
-            valkey.ping()
+            get_valkey().ping()
             checks["valkey"] = "ok"
-        except Exception as e:
-            checks["valkey"] = f"error: {e}"
-    else:
-        checks["valkey"] = "no disponible (degraded mode)"
-
-    all_ok = all(v == "ok" for v in checks.values())
-    return {
-        "status": "ok" if all_ok else "degraded",
-        "checks": checks,
-    }
+        except Exception:
+            checks["valkey"] = "unavailable"
+    return {"status": "degraded" if checks["valkey"] == "unavailable" else "ok", "checks": checks}

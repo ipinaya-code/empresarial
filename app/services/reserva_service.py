@@ -177,7 +177,7 @@ def reservar_provisional(db: Session, usuario_id: int, asiento_id: int) -> Reser
 
     El asiento pasa a RESERVADO_PROVISIONAL y el pasajero tiene
     10 minutos para confirmar antes de que expire automáticamente.
-    Inspirado en IATA NDC Offer Validity Windows.
+    TTL elegido para el laboratorio; no constituye una implementación NDC.
     """
     try:
         asiento = db.query(Asiento).filter(Asiento.id == asiento_id).with_for_update().first()
@@ -254,6 +254,7 @@ def confirmar_reserva(db: Session, reserva_id: int) -> Reserva:
         asiento.estado = EstadoAsiento.DISPONIBLE
         asiento.fecha_expiracion = None
         db.commit()
+        _invalidar_cache_vuelo(asiento)
         logger.warning(f"Reserva {reserva.codigo_reserva} expirada al intentar confirmar")
         raise ReservaExpiradaError(reserva_id)
 

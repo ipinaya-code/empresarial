@@ -8,15 +8,15 @@
 /app/models/                   @ipinaya-code
 /app/services/reserva_service.py @ipinaya-code
 /app/db/                       @ipinaya-code
-/docs/diagrama_er.md           @ipinaya-code
-/docs/diagrama_secuencia_reserva.md @ipinaya-code
+/docs/diagramas/diagrama_er.md           @ipinaya-code
+/docs/diagramas/diagrama_secuencia_reserva.md @ipinaya-code
 
 # Epic 2: Arquitectura CQRS (Thiago Sossa - Arquitecto / DevOps)
 /app/api/                      @ipinaya-code
 /app/services/disponibilidad_service.py @ipinaya-code
 /docker/                       @ipinaya-code
 /.github/workflows/            @ipinaya-code
-/docs/arquitectura_cqrs_objetivo_2.md @ipinaya-code
+/docs/arquitectura/arquitectura_cqrs_objetivo_2.md @ipinaya-code
 
 # Epic 3: Caché Valkey (Nataly Crespo - Ingeniera / DBA)
 /app/db/cache.py               @ipinaya-code
@@ -25,4 +25,4 @@
 # Epic 4: Pruebas de Estrés (Wilson Gonzales - QA Lead)
 /tests/                        @ipinaya-code
 /scripts/                      @ipinaya-code
-/docs/protocolo_pruebas_estres.md @ipinaya-code
+/docs/testing/protocolo_pruebas_estres.md @ipinaya-code

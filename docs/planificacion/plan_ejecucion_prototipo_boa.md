@@ -1,68 +1,58 @@
-# Plan de Ejecución del Prototipo BoA (CHORE y Backlog)
+# Backlog y tareas de mantenimiento
 
-Este documento estructura el plan de trabajo (CHORE/Backlog) para el desarrollo del prototipo del módulo de reservas e inventario de Boliviana de Aviación (BoA). Está diseñado para cumplir con los objetivos específicos de la matriz de seguimiento y alineado con los estándares internacionales (IATA NDC, ONE Order) para resolver los problemas de concurrencia y sobreasignación.
+Estados: entregado = artefacto y prueba disponible; preparado = herramienta escrita pendiente de ejecución externa; pendiente = trabajo futuro. Los responsables corresponden a roles de las matrices, no a una aceptación nueva de tareas.
 
-## Estado Actual del Proyecto
-El proyecto actualmente cuenta con la base transaccional completa usando **FastAPI**, **PostgreSQL** y **SQLAlchemy**. Se ha comprobado exitosamente la mitigación de las condiciones de carrera mediante bloqueos pesimistas (`SELECT FOR UPDATE`), implementando el flujo de reserva provisional de asientos. 
+## Base necesaria para continuar
 
-## Arquitectura General del Prototipo
+| ID | Tarea | Estado / aceptación | Rol |
+|---|---|---|---|
+| CH-01 | Corregir alcance y afirmaciones sin respaldo | Entregado: plan, metodología y fuentes; originales preservados | Coordinación |
+| CH-02 | Quitar módulos y configuración duplicados | Entregado: paquetes canónicos sin colisión | Backend |
+| CH-03 | Podman por defecto, puertos locales y datos persistentes | Entregado: Compose y Make; ver evidencia de ejecución | DevOps |
+| CH-04 | Fijar dependencias y esquema | Entregado: tres locks y migración inicial | DevOps/DBA |
+| CH-05 | CI con PostgreSQL real | Preparado: workflow; validar ejecución remota en próximo push | DevOps |
+| CH-06 | Calidad, enlaces y reportes | Entregado: Make/check y artefactos de pruebas | QA |
+| CH-07 | Playwright | Entregado: smoke Chromium; UI aún sin implementar | QA |
+| CH-08 | Seguridad mínima de laboratorio | Entregado: rutas demo explícitas y readiness 503 | Backend |
+| CH-09 | Procedimientos de despliegue/rollback | Entregado: runbook; operación pública pendiente | DevOps |
+| CH-10 | Jenkins alternativo | Preparado: Jenkinsfile; servidor/agente aún no provisionados | DevOps |
+| CH-11 | Gobernanza externa | Pendiente: protección de main, permisos y aprobación docente; licencia MIT original documentada | Coordinación |
+| CH-12 | Evaluar Vagrant | Decisión documentada; no requerido por la ruta Podman | DevOps |
 
-El prototipo se estructurará bajo los siguientes principios:
-1. **Separación de Responsabilidades (CQRS):** Lecturas cacheadas, escrituras transaccionales.
-2. **Locking Híbrido:** Uso de Valkey para reservas temporales (Soft Lock) y SQL `SELECT FOR UPDATE` para la confirmación de pago (Pessimistic Lock).
-3. **Escalabilidad:** Simulación de picos de tráfico usando K6/JMeter.
+## Cierre O1/O2
 
----
+| ID | Entrega | Evidencia |
+|---|---|---|
+| O1-01 | Índice parcial corregido y unicidad vuelo/asiento | Modelos, Alembic y test de escritura directa |
+| O1-02 | Concurrencia sobre PG con conexiones separadas | Control negativo aislado y un único ganador en rutas protegidas |
+| O1-03 | Expiración, historial y liberación coherente | Reutilización de asiento, invalidación al expirar |
+| O2-01 | Lecturas sin lock y baseline conservado | Modos baseline/refactored; mismo contrato |
+| O2-02 | Comparación bajo carga | k6, resúmenes JSON e informe; cada meta conserva su estado real |
+| O2-03 | Documentos para exposición | Informe, diagramas, matriz de trazabilidad y registro de evidencia |
 
-## Backlog de Tareas por Responsable
+## O3 — Caché (después de O2)
 
-### Epic 1: Control Transaccional y Prevención de Race Conditions (COMPLETADO ✅)
-**Responsable:** Iver Pinaya (Líder Backend / DBA)
-**Estado:** Completado (commit actuales y `README.md` respaldan su entrega).
+| ID / prioridad | Trabajo concreto | Aceptación y dependencia | Rol / estimación |
+|---|---|---|---|
+| O3-01 P0 | Definir TTL por dato | Disponibilidad propuesta 30 s; itinerarios/horarios 300 s; tarifas fuera de modelo. Justificar cambios | DBA, 0.5 jornada |
+| O3-02 P0 | Resolver carrera de repoblado | Test fuerza lectura antigua → commit/invalidate → set antiguo; versionado o estrategia elegida mantiene política de frescura | Backend, 1–2 |
+| O3-03 P0 | Probar Valkey real | Hit, miss, caída, recuperación y caché corrupta; ninguna doble asignación | QA, 1 |
+| O3-04 P1 | Medir SQL y caché | Mismo workload con/sin caché, contadores SQL reales; reducción ≥70% como meta académica | QA/DBA, 1 |
+| O3-05 P1 | Expiración periódica | Worker idempotente, lotes acotados, confirmación concurrente, reinicio y métricas de retraso | Backend, 1–2 |
+| O3-06 P1 | Evitar cache stampede | Medir arranque frío y carga simultánea; coalescing/versionado si se necesita | Backend, 1 |
 
-*   ✅ **Task 1.1:** Diseñar el Diagrama de Entidad Relación (DER) del prototipo (Tablas: `Vuelos`, `Asientos`, `Reservas`, `Usuarios`). *(Completado en `docs/diagramas/diagrama_er_reserva_vuelos.png`)*
-*   ✅ **Task 1.2:** Crear el Diagrama de Secuencia ilustrando el flujo de reserva con `SELECT FOR UPDATE`. *(Completado en `docs/diagramas/diagrama_secuencia_reserva_vuelos.png`)*
-*   ✅ **Task 1.3:** Implementar el módulo transaccional (Backend) asegurando que la transacción asigne el asiento y cree el registro de reserva atómicamente. *(Implementado en `app/main.py` y `app/models.py`)*
-*   ✅ **Task 1.4:** Desarrollar scripts para registrar logs que evidencien el éxito del control transaccional. *(Implementado en `tests/test_concurrency.py` y `logs/concurrencia.log`)*
+## O4 — Estrés y validación periódica
 
----
+| ID / prioridad | Trabajo | Criterio | Rol / estimación |
+|---|---|---|---|
+| O4-01 P0 | Carga mixta con fixtures suficientes | Consulta → provisional → confirmar; separar 409 esperado de error técnico y fallar por 5xx | QA, 1 |
+| O4-02 P0 | Pico y sostenimiento | Rampas, spike, soak ≥30 min; CPU/RAM, conexiones, locks, latencia y errores correlacionados | QA/DevOps, 1 |
+| O4-03 P0 | Fallos y recuperación | Reiniciar API/Valkey, cortar BD controladamente; preservar invariantes y recuperar readiness | QA/DBA, 1 |
+| O4-04 P1 | Repetición programada | Job manual/nocturno en staging aislado, artefactos y aviso al responsable sin datos sensibles | DevOps, 1 |
+| O4-05 P0 | Informe final revisado | Todas las repeticiones, límites del hardware y dictamen por criterio | Equipo, 1 |
 
-### Epic 2: Refactorización y Soporte a Picos de Demanda (COMPLETADO ✅)
-**Responsable:** Thiago Sossa (Arquitecto de Software / DevOps)
-**Estado:** Completado (Endpoints implementados en `app/main.py` y script de estrés K6).
+## Antes de una publicación real
 
-*   ✅ **Task 2.1:** Diseñar el Diagrama de Arquitectura comparativo: Baseline (sin desacoplamiento) vs. Versión Refactorizada (lectura/escritura separadas - patrón CQRS). *(Completado en `docs/arquitectura_cqrs_objetivo_2.md`)*
-*   ✅ **Task 2.2:** Establecer las métricas Baseline de la API actual (que lee directamente de PostgreSQL) utilizando un script básico de carga (ej. 50/100 usuarios concurrentes).
-*   ✅ **Task 2.3:** Refactorizar el código para implementar CQRS en `app/main.py`. Crear endpoints de lectura independientes (`/vuelos/disponibilidad`) desacoplados de los endpoints de escritura (`/reservar/*`).
-*   ✅ **Task 2.4:** Configurar un entorno en `docker-compose.yml` para disparar pruebas de carga comparativa de lectura simulando 50, 200 y 500 usuarios virtuales.
-*   ✅ **Task 2.5:** Extraer las métricas p50/p95/p99, req/s y tasa de errores y generar un reporte de latencia. (Meta: Latencia < 200ms, Error Rate < 1%).
+P0: identidad y permisos por propietario (incluido acceso directo a objetos), idempotencia, rate limiting, secretos, HTTPS, proxy, rutas administrativas separadas, validación de datos y revisión ASVS. P0: base de datos con rol mínimo, migración ensayada, backup restaurado, monitoreo, responsables y respuesta a incidentes. P1: SBOM, análisis de dependencias e imagen, firma/digest, métricas, alertas y retención de logs. [Riesgos y decisiones](riesgos_decisiones.md).
 
----
-
-### Epic 3: Implementación de Capa de Caché con Valkey (COMPLETADO ✅)
-**Responsable:** Nataly Crespo (Ingeniera de Software / DBA)
-**Estado:** Completado (Valkey agregado al entorno, requerimientos, y `app/main.py`).
-
-*   ✅ **Task 3.1:** Crear el Diagrama de Arquitectura ilustrando la integración con Valkey (flujos de *Cache Hit* vs *Cache Miss*).
-*   ✅ **Task 3.2:** Actualizar `docker/docker-compose.yml` añadiendo un contenedor oficial de Valkey y configurar la imagen de FastAPI (`Dockerfile`) para instalar dependencias de Valkey (ej. `redis-py` conectado a Valkey en `requirements.txt`).
-*   ✅ **Task 3.3:** Modificar el endpoint de disponibilidad de asientos para que lea primero de Valkey. Establecer las políticas de TTL (ej: invalidación al reservar un asiento, expiración en 10 min).
-*   ✅ **Task 3.4:** Ejecutar la prueba comparativa usando los scripts de K6 para documentar la reducción de queries directas a PostgreSQL ("Con Caché" vs "Sin Caché").
-*   *Limitación documentada:* Explicar en los documentos cómo el motor de pagos externo interactuaría con esta caché en un caso productivo real (fuera del alcance del prototipo).
-
----
-
-### Epic 4: Protocolo de Pruebas de Estrés Definitivo (COMPLETADO ✅)
-**Responsable:** Wilson Gonzales (Líder de QA / Pruebas de Rendimiento)
-**Estado:** Completado (Documento y scripts finalizados).
-
-*   ✅ **Task 4.1:** Elaborar el documento formal del protocolo de pruebas de estrés detallando escenarios de campañas de alta demanda (usuarios virtuales, rampas, aserciones y criterios de fallo). Guardarlo en `docs/protocolo_pruebas_estres.md`.
-*   ✅ **Task 4.2:** Desarrollar los scripts automatizados avanzados (ej. `scripts/load_test_k6.js`) que simulen todo el "User Journey" (Consultar Vuelos -> Consultar Asientos -> Reservar Seguro).
-*   ✅ **Task 4.3:** Añadir un comando en el `Makefile` (ej. `make stress-test`) para facilitar la ejecución automatizada del test en el entorno final integrado de Docker.
-*   ✅ **Task 4.4:** Generar el reporte técnico final comparativo mostrando el rendimiento general y cómo se evitó la saturación de la Base de Datos bajo extremo estrés.
-
----
-
-## Entregables Finales Esperados del Equipo
-1. Repositorio Git centralizado con el backend, PostgreSQL, Valkey, y scripts K6 listos para ejecutar con `make`.
-2. Documento de Arquitectura, DER y diagramas de secuencia actualizados.
-3. Reporte final de validación de concurrencia (Epic 1) y estrés (Epic 4) demostrando 0 sobreasignaciones bajo carga masiva (latencia optimizada mediante CQRS y Caché).
+Extensiones separadas: panel web accesible y pruebas Playwright del recorrido de pasajero; pagos mediante adaptador simulado sin PAN; cancelación e idempotencia; instancias de vuelo por fecha; check-in/boletos solo después de definir reglas. No se introducen números de boleto “IATA válidos” ni reglas de check-in de BoA sin especificación comprobada.

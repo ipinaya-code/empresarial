@@ -10,7 +10,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.core.config import get_settings
 from app.core.exceptions import BoABaseException, boa_exception_to_http
+from app.schemas.vuelo import VueloDisponibilidadResponse
 from app.services.disponibilidad_service import consultar_disponibilidad
 
 router = APIRouter()
@@ -18,6 +20,7 @@ router = APIRouter()
 
 @router.get(
     "/{vuelo_id}/disponibilidad",
+    response_model=VueloDisponibilidadResponse if get_settings().read_mode == "refactored" else None,
     summary="Consultar disponibilidad de asientos",
     description=(
         "Endpoint de lectura optimizado (CQRS: Query). "
