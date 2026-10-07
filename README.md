@@ -15,7 +15,7 @@ La fuente de alcance son las matrices académicas conservadas en `docs/entregabl
 | 3 | Caché intermedia e invalidación | Integración preliminar existente, desactivada por defecto; validación pendiente |
 | 4 | Estrés periódico y capacidad | Herramientas y plan preparados; campaña final pendiente |
 
-Frontend, pagos simulados, check-in y boletos son ampliaciones opcionales; no sustituyen los objetivos 3 y 4. Ningún resultado local implica aceptación docente, un SLA institucional o autorización de producción.
+Frontend ([`frontend/`](frontend/README.md), inicial), pagos simulados, check-in y boletos son ampliaciones opcionales; no sustituyen los objetivos 3 y 4. Ningún resultado local implica aceptación docente, un SLA institucional o autorización de producción.
 
 ## Arranque con Podman
 
@@ -64,6 +64,7 @@ Playwright comprueba el acceso desde Chromium a la API. Aún no existe una inter
 
 ```text
 app/                 API, servicios, modelos, configuración y persistencia
+frontend/            interfaz de pasajeros (React + Vite + Tailwind + HeroUI); ver frontend/README.md
 migrations/          esquema versionado con Alembic
 tests/              unitarias, integración, recorrido API, PostgreSQL y navegador
 scripts/             herramientas de medición y control documental
