@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+:root {
+  --accent: oklch(0.45 0.16 258);
+  --warning: oklch(0.84 0.16 88);
+}
+
+body {
+  min-height: 100vh;
+}
